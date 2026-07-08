@@ -1,0 +1,10 @@
+Fragmento de código
+id_estado,descripcion
+1,Borrador
+2,Presupuestado
+3,Pendiente de aprobación
+4,Confirmado
+5,En ejecución
+6,Celebrado
+7,Cancelado
+8,Facturado

@@ -1,0 +1,42 @@
+Fragmento de código
+id_evento,nombre_evento,ciudad,lugar_confirmado,fecha_inicio,fecha_fin,numero_personas,tipo_evento,nota,id_estado,id_cliente,id_presupuesto
+1,Tech Summit 2026,Vitoria-Gasteiz,Palacio Europa,2026-09-10,2026-09-12,500,Congreso,mull,4,1,1
+2,Congreso Energía,Bilbao,BEC,2026-10-05,2026-10-06,300,Congreso,mull,2,2,2
+3,FinTech Forum,Bilbao,Azkuna Zentroa,2026-11-15,2026-11-15,150,Reunión,mull,1,3,3
+4,Presentación SEAT,Barcelona,SEAT HQ,2026-12-01,2026-12-01,200,Lanzamiento,mull,2,4,4
+5,Jornada Energía,Madrid,Repsol Campus,2026-09-20,2026-09-20,100,Workshop,mull,6,5,5
+6,Kaiku Innovation,San Sebastián,Tabakalera,2026-10-10,2026-10-10,80,Presentación,mull,1,6,6
+7,Consultoría Erabaki,Vitoria-Gasteiz,Palacio Europa,2026-10-25,2026-10-25,50,Reunión,mull,4,7,7
+8,Fagor Industrial,Arrasate,Fagor HQ,2026-11-05,2026-11-06,120,Congreso,mull,1,8,8
+9,CAF Rail Day,Beasain,CAF HQ,2026-12-10,2026-12-10,250,Evento,mull,2,9,9
+10,Eroski Forum,Elorrio,Eroski HQ,2026-09-30,2026-09-30,300,Reunión,mull,6,10,10
+11,Petronor Energy,Muskiz,Petronor HQ,2026-10-15,2026-10-15,200,Workshop,mull,4,11,11
+12,Euskaltel Tech,Derio,Euskaltel HQ,2026-11-20,2026-11-20,150,Presentación,mull,1,12,12
+13,Gureak Social,San Sebastián,Kursaal,2026-12-05,2026-12-05,400,Evento,mull,2,13,13
+14,Igo Software,Vitoria-Gasteiz,Palacio Europa,2026-09-25,2026-09-25,60,Reunión,mull,4,14,14
+15,Basque Culinary Summit,San Sebastián,Basque Culinary,2026-10-12,2026-10-14,200,Congreso,mull,6,15,15
+16,Siemens Tech,Zamudio,Siemens HQ,2026-11-02,2026-11-02,180,Workshop,mull,1,16,16
+17,Ingeteam Power,Zamudio,Ingeteam HQ,2026-12-15,2026-12-15,100,Presentación,mull,2,17,17
+18,ABB Sostenibilidad,Oiartzun,ABB HQ,2026-10-20,2026-10-20,150,Reunión,mull,4,18,18
+19,IDOM Engineering,Bilbao,Euskalduna,2026-09-28,2026-09-28,250,Congreso,mull,1,19,19
+20,Sener Innovation,Getxo,Sener HQ,2026-11-10,2026-11-10,120,Workshop,mull,6,20,20
+21,Gamesa Wind,Zamudio,Gamesa HQ,2026-12-20,2026-12-20,300,Evento,mull,2,21,21
+22,Ulma Industrial,Oñati,Ulma HQ,2026-10-05,2026-10-05,200,Presentación,mull,4,22,22
+23,Danobat Machine,Elgoibar,Danobat HQ,2026-11-18,2026-11-18,150,Reunión,mull,1,23,23
+24,Mondragon Edu,Mondragón,Mondragon Univ,2026-12-02,2026-12-02,500,Congreso,mull,2,24,24
+25,Kide Cool,Berriatua,Kide HQ,2026-09-22,2026-09-22,80,Workshop,mull,4,25,25
+26,Orbea Bike,Mallabia,Orbea HQ,2026-10-30,2026-10-30,150,Lanzamiento,mull,6,26,26
+27,Delfin Logística,Bilbao,BEC,2026-11-12,2026-11-12,100,Reunión,mull,1,27,27
+28,Berri Construcción,Vitoria-Gasteiz,Palacio Europa,2026-12-08,2026-12-08,200,Evento,mull,2,28,28
+29,Altuna Construye,Bergara,Altuna HQ,2026-10-18,2026-10-18,120,Presentación,mull,4,29,29
+30,Mendi Textil,Vitoria-Gasteiz,Artium,2026-11-25,2026-11-25,50,Reunión,mull,1,30,30
+31,Susaeta Libros,Vitoria-Gasteiz,Palacio Europa,2026-12-12,2026-12-12,300,Congreso,mull,2,31,31
+32,Loidi Hotel,San Sebastián,María Cristina,2026-09-27,2026-09-27,100,Evento,mull,4,32,32
+33,Aiz Alimentos,Tolosa,San Telmo,2026-10-22,2026-10-22,80,Workshop,mull,6,33,33
+34,Irin Legal,Bilbao,Azkuna Zentroa,2026-11-08,2026-11-08,60,Reunión,mull,1,34,34
+35,Oia Turismo,Zarautz,Kursaal,2026-12-03,2026-12-03,150,Evento,mull,2,35,35
+36,Zug Metal,Eibar,Danobat,2026-10-14,2026-10-14,120,Presentación,mull,4,36,36
+37,Lar Madera,Azpeitia,Ulma,2026-11-28,2026-11-28,90,Workshop,mull,1,37,37
+38,Ega Diseño,Hernani,Tabakalera,2026-12-18,2026-12-18,70,Lanzamiento,mull,2,38,38
+39,Ote Consultoría,Irun,Kursaal,2026-09-29,2026-09-29,40,Reunión,mull,4,39,39
+40,Basa Servicios,Vitoria-Gasteiz,Palacio Europa,2026-10-28,2026-10-28,200,Evento,mull,1,40,40

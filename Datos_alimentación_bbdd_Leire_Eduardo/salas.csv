@@ -1,0 +1,122 @@
+Fragmento de código
+id_sala,nombre_sala,tipo,capacidad_max_sala,id_espacio,nota_sala
+1,Auditorio Principal,Auditorio,1000,1,mull
+2,Sala Multiusos A,Reunión,150,1,mull
+3,Sala Europa 2,Reunión,200,15,mull
+4,Sala Europa 3,Reunión,200,15,mull
+5,Auditorio Artium,Auditorio,400,2,mull
+6,Sala Exposiciones,Exposición,200,2,mull
+7,Pabellón 1,Feria,5000,3,mull
+8,Pabellón 2,Feria,5000,3,mull
+9,Sala VIP BEC,Reunión,50,3,mull
+10,Auditorio Euskalduna,Auditorio,1800,4,mull
+11,Sala B1,Reunión,100,4,mull
+12,Sala B2,Reunión,100,4,mull
+13,Auditorio Kursaal,Auditorio,1500,27,mull
+14,Sala Cámara,Reunión,300,27,mull
+15,Sala Cine,Cine,200,6,mull
+16,Espacio Plaza,Evento,300,6,mull
+17,Escenario Principal,Auditorio,800,7,mull
+18,Sala Ensayos,Taller,100,7,mull
+19,Atrio Guggenheim,Evento,300,8,mull
+20,Sala Conferencias,Reunión,150,8,mull
+21,Salón Real,Reunión,250,9,mull
+22,Jardines Miramar,Evento,100,9,mull
+23,Auditorio Azkuna,Auditorio,400,10,mull
+24,Mediateka,Taller,50,10,mull
+25,Salón Bilbao,Reunión,200,11,mull
+26,Sala Negocios,Reunión,50,11,mull
+27,Salón Imperial,Reunión,350,12,mull
+28,Sala Juntas,Reunión,40,12,mull
+29,Salón Cristina,Reunión,250,13,mull
+30,Biblioteca María Cristina,Reunión,30,13,mull
+31,Salón Vitoria,Reunión,200,14,mull
+32,Sala Reuniones NH,Reunión,50,14,mull
+33,Sala Victoria Eugenia,Auditorio,850,16,mull
+34,Sala Club,Reunión,100,16,mull
+35,Sala BBK Principal,Auditorio,350,17,mull
+36,Aula Taller BBK,Taller,50,17,mull
+37,Claustro San Telmo,Exposición,200,18,mull
+38,Sala Capitular,Reunión,50,18,mull
+39,Sala Bibat,Exposición,120,19,mull
+40,Aula Tecnológica,Taller,100,20,mull
+41,Sala Conferencias BEC,Reunión,100,3,mull
+42,Sala Reuniones B1,Reunión,30,3,mull
+43,Sala Reuniones B2,Reunión,30,3,mull
+44,Auditorio Principal Artium,Auditorio,300,40,mull
+45,Sala Talleres Artium,Taller,80,40,mull
+46,Sala Prensa Kursaal,Reunión,40,27,mull
+47,Sala VIP Kursaal,Reunión,30,27,mull
+48,Sala Exposiciones Tabakalera,Exposición,250,6,mull
+49,Sala Encuentros Tabakalera,Reunión,60,6,mull
+50,Auditorio Europa 1,Auditorio,500,1,mull
+51,Sala Vitoria,Reunión,100,1,mull
+52,Sala Gasteiz,Reunión,100,1,mull
+53,Salón Bizkaia,Reunión,200,25,mull
+54,Aula Magna,Reunión,150,25,mull
+55,Sala Juntas Bizkaia,Reunión,20,25,mull
+56,Auditorio Guggenheim 2,Auditorio,150,8,mull
+57,Sala Educación,Taller,40,8,mull
+58,Sala Conferencias Miramar,Reunión,100,9,mull
+59,Sala Reuniones Miramar,Reunión,40,9,mull
+60,Auditorio Azkuna 2,Auditorio,200,10,mull
+61,Sala Taller 1,Taller,30,10,mull
+62,Sala Taller 2,Taller,30,10,mull
+63,Salón Reuniones Carlton,Reunión,100,12,mull
+64,Sala Eventos Carlton,Evento,150,12,mull
+65,Salón María Cristina 2,Reunión,100,13,mull
+66,Sala Prensa M.Cristina,Reunión,50,13,mull
+67,Sala Juntas NH,Reunión,30,14,mull
+68,Sala Eventos NH,Evento,120,14,mull
+69,Auditorio Victoria Eugenia 2,Auditorio,200,16,mull
+70,Sala Exposiciones V.Eugenia,Exposición,100,16,mull
+71,Sala BBK 2,Reunión,100,17,mull
+72,Sala BBK 3,Reunión,50,17,mull
+73,Sala San Telmo 2,Reunión,80,18,mull
+74,Sala San Telmo 3,Reunión,40,18,mull
+75,Sala Bibat 2,Exposición,60,19,mull
+76,Sala Reuniones Bibat,Reunión,30,19,mull
+77,Sala Parque 1,Reunión,60,20,mull
+78,Sala Parque 2,Reunión,60,20,mull
+79,Sala Torre Iberdrola 1,Reunión,80,21,mull
+80,Sala Torre Iberdrola 2,Reunión,80,21,mull
+81,Sala Museo Bellas Artes 1,Exposición,100,22,mull
+82,Sala Museo Bellas Artes 2,Exposición,100,22,mull
+83,Salón Silken Vitoria,Reunión,100,23,mull
+84,Sala Reuniones Silken,Reunión,40,23,mull
+85,Sala Aquarium 1,Auditorio,150,24,mull
+86,Sala Aquarium 2,Reunión,80,24,mull
+87,Salón Villasuso 1,Reunión,70,26,mull
+88,Salón Villasuso 2,Reunión,60,26,mull
+89,Sala Bilbao Arena 1,Deportivo,4000,28,mull
+90,Sala Bilbao Arena 2,Deportivo,2000,28,mull
+91,Sala Claustro 1,Evento,100,29,mull
+92,Sala Claustro 2,Evento,80,29,mull
+93,Sala Aldabe 1,Reunión,100,30,mull
+94,Sala Aldabe 2,Reunión,80,30,mull
+95,Sala Aiete 1,Reunión,80,31,mull
+96,Sala Aiete 2,Reunión,60,31,mull
+97,Sala Museo Diocesano 1,Exposición,100,32,mull
+98,Sala Museo Diocesano 2,Exposición,80,32,mull
+99,Sala Orueta 1,Reunión,60,33,mull
+100,Sala Orueta 2,Reunión,50,33,mull
+101,Salón Escoriaza 1,Reunión,50,34,mull
+102,Salón Escoriaza 2,Reunión,40,34,mull
+103,Sala Multiusos BEC 2,Feria,2000,35,mull
+104,Sala Multiusos BEC 3,Feria,1000,35,mull
+105,Salón Miramar 2,Reunión,60,36,mull
+106,Salón Miramar 3,Reunión,50,36,mull
+107,Sala Ensanche 1,Reunión,80,37,mull
+108,Sala Ensanche 2,Reunión,60,37,mull
+109,Sala Uleta 1,Reunión,60,38,mull
+110,Sala Uleta 2,Reunión,50,38,mull
+111,Plaza Tabakalera 2,Evento,150,39,mull
+112,Plaza Tabakalera 3,Evento,80,39,mull
+113,Sala Artium 2,Exposición,80,40,mull
+114,Sala Artium 3,Exposición,60,40,mull
+115,Sala Principal Europa,Auditorio,800,1,mull
+116,Sala Reuniones Europa,Reunión,50,1,mull
+117,Sala Conferencias Artium,Reunión,100,2,mull
+118,Sala Juntas BEC,Reunión,20,3,mull
+119,Sala B3 Euskalduna,Reunión,80,4,mull
+120,Sala Prensa Kursaal 2,Reunión,30,27,mull

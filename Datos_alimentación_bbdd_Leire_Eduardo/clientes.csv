@@ -1,0 +1,42 @@
+Fragmento de código
+id_cliente,cliente,email,telefono,empresa,sector,ciudad
+1,Marta Ruiz,m.ruiz@telefonica.es,910001111,Telefonica,Telecomunicaciones,Madrid
+2,Carlos Sanz,csanz@iberdrola.es,944002222,Iberdrola,Energía,Bilbao
+3,Elena Gómez,egomez@bbva.com,915003333,BBVA,Banca,Bilbao
+4,Jordi Valls,jvalls@seat.es,932004444,SEAT,Automoción,Barcelona
+5,Ana Belén,abelen@repsol.com,917005555,Repsol,Energía,Madrid
+6,Luis García,l.garcia@kaiku.com,943006666,Kaiku,Alimentación,San Sebastián
+7,María López,m.lopez@erabaki.com,945007777,Erabaki,Consultoría,Vitoria-Gasteiz
+8,Jorge Sanz,j.sanz@fagor.com,943008888,Fagor,Industrial,Arrasate
+9,Sofía Martí,s.marti@caf.net,943009999,CAF,Ferroviario,Beasain
+10,David Prieto,d.prieto@eroski.es,944001122,Eroski,Distribución,Elorrio
+11,Iñaki Osa,i.osa@petronor.eus,946002233,Petronor,Energía,Muskiz
+12,Maite Etxe,m.etxe@euskaltel.com,944003344,Euskaltel,Telecomunicaciones,Derio
+13,Aitor Laka,a.laka@gureak.eus,943004455,Gureak,Servicios,San Sebastián
+14,Olatz Zulo,o.zulo@igo.eus,945005566,Igo,Software,Vitoria-Gasteiz
+15,Xabi Arri,x.arri@basque.eus,944006677,Basque Culinary,Educación,San Sebastián
+16,Lucía Rey,l.rey@siemens.es,945007788,Siemens,Industrial,Zamudio
+17,Patxi Mendi,p.mendi@ingeteam.com,944008899,Ingeteam,Energía,Zamudio
+18,Ane Sol,a.sol@abb.es,943009900,ABB,Industrial,Oiartzun
+19,Gorka Ibai,g.ibai@idom.com,944001100,IDOM,Ingeniería,Bilbao
+20,Nerea Izar,n.izar@sener.es,944002211,Sener,Ingeniería,Getxo
+21,Mikel Ur,m.ur@gamesa.es,945003322,Siemens Gamesa,Energía,Zamudio
+22,Edurne Goi,e.goi@ulma.com,943004433,Ulma,Industrial,Oñati
+23,Jon Mendiz,j.mendiz@danobat.com,943005544,Danobat,Industrial,Elgoibar
+24,Amaia Alt,a.alt@mondragon.edu,943006655,Mondragon Univ,Educación,Mondragón
+25,Unai Bas,u.bas@kide.com,943007766,Kide,Refrigeración,Berriatua
+26,Leire Zer,l.zer@orbea.com,943008877,Orbea,Deporte,Mallabia
+27,Iker Gara,i.gara@delfin.es,944009988,Delfin,Logística,Bilbao
+28,Ainara Ber,a.ber@berri.es,944001199,Berri,Construcción,Vitoria-Gasteiz
+29,Eneko Alt,e.alt@altuna.es,943002200,Altuna,Construcción,Bergara
+30,Idoia Mendi,i.mendi@mendi.es,945003311,Mendi,Textil,Vitoria-Gasteiz
+31,Asier Susa,a.susa@susaeta.es,945004422,Susaeta,Publicaciones,Vitoria-Gasteiz
+32,Jone Loidi,j.loidi@loidi.es,943005533,Loidi,Hostelería,San Sebastián
+33,Begoña Aiz,b.aiz@aiz.es,943006644,Aiz,Alimentación,Tolosa
+34,Kepa Irin,k.irin@irin.es,944007755,Irin,Legal,Bilbao
+35,Maider Oia,m.oia@oia.es,943008866,Oia,Turismo,Zarautz
+36,Iban Zug,i.zug@zug.es,943009977,Zug,Metalúrgica,Eibar
+37,Irati Lar,i.lar@lar.es,943001188,Lar,Madera,Azpeitia
+38,Oier Ega,o.ega@ega.es,943002299,Ega,Diseño,Hernani
+39,Nora Ote,n.ote@ote.es,943003300,Ote,Consultoría,Irun
+40,Txema Basa,t.basa@basa.es,945004411,Basa,Servicios,Vitoria-Gasteiz

@@ -1,0 +1,42 @@
+Fragmento de código
+id_espacio,nombre_espacio,ciudad,direccion,capacidad_total,aforo,nota,telefono_contacto,nombre_contacto,email_contacto
+1,Palacio Europa,Vitoria-Gasteiz,"Av. Gasteiz, 85",1200,1000,mull,945161520,Recepción,europa@vitoria-gasteiz.eus
+2,Artium Museoa,Vitoria-Gasteiz,"C. de Francia, 24",500,400,mull,945209020,Eventos,info@artium.eus
+3,BEC,Barakaldo,Ansio Etorbidea,20000,15000,mull,944040000,Comercial,bec@bec.eu
+4,Euskalduna Bilbao,Bilbao,"Av. Abandoibarra, 4",2100,1800,mull,944035000,Gestión,euskalduna@euskalduna.eus
+5,Kursaal,San Sebastián,"Av. Zurriola, 1",1800,1500,mull,943003000,Info,info@kursaal.eus
+6,Tabakalera,San Sebastián,"Pza. Nestor Barea, 1",600,500,mull,943011311,Reservas,info@tabakalera.eus
+7,Teatro Principal,Vitoria-Gasteiz,C. de San Prudencio,900,800,mull,945161045,Taquilla,teatroprincipal@vitoria-gasteiz.eus
+8,Museo Guggenheim,Bilbao,"Av. Abandoibarra, 2",400,300,mull,944359080,Eventos,eventos@guggenheim-bilbao.eus
+9,Palacio Miramar,San Sebastián,P. de Miraconcha,300,250,mull,943219022,Secretaría,miramar@donostia.eus
+10,Azkuna Zentroa,Bilbao,"Pza. Arriquibar, 4",450,400,mull,944014014,Info,info@azkunazentroa.eus
+11,Hotel Gran Bilbao,Bilbao,Indalecio Prieto, 1,350,300,mull,944895300,Eventos,eventos@hotelgranbilbao.com
+12,Hotel Carlton,Bilbao,Pza. Federico Moyúa,400,350,mull,944162200,Recepción,info@hotelcarlton.es
+13,Hotel María Cristina,San Sebastián,P. República Argentina,300,250,mull,943437600,Comercial,info.mariacristina@luxurycollection.com
+14,Hotel NH Canciller Ayala,Vitoria-Gasteiz,R. de Cervantes, 5,250,200,mull,945131000,Reservas,nhcancillerayala@nh-hotels.com
+15,Palacio Congresos Europa,Vitoria-Gasteiz,"Av. Gasteiz, 85",1000,900,mull,945161520,Dirección,info@vitoria-gasteiz.eus
+16,Teatro Victoria Eugenia,San Sebastián,P. República Argentina,900,850,mull,943481160,Reservas,info@donostiakultura.eus
+17,Sala BBK,Bilbao,Gran Vía, 19,400,350,mull,944053300,Eventos,salabbk@bbk.eus
+18,San Telmo Museoa,San Sebastián,Pza. Zuloaga, 1,200,180,mull,943481580,Info,santelmo@donostia.eus
+19,Bibat Museoa,Vitoria-Gasteiz,C. Cuchillería, 54,150,120,mull,945203700,Dirección,bibat@bizkaia.eus
+20,Parque Tecnológico Álava,Miñano,Albert Einstein, 15,300,250,mull,945214000,Recepción,info@parke.eus
+21,Torre Iberdrola,Bilbao,Pza. Euskadi, 5,200,180,mull,944010101,Eventos,info@torreiberdrola.eus
+22,Museo Bellas Artes,Bilbao,Museo Plaza, 2,250,220,mull,944396060,Info,info@museobilbao.com
+23,Hotel Silken,Vitoria-Gasteiz,Portal de Castilla, 8,200,180,mull,945141100,Eventos,silken.vitoria@hoteles-silken.com
+24,Aquarium San Sebastián,San Sebastián,P. del Muelle,300,280,mull,943440099,Info,info@aquariumss.com
+25,Bizkaia Aretoa,Bilbao,"Av. Abandoibarra, 3",500,450,mull,946018300,Reservas,bizkaia-aretoa@ehu.eus
+26,Palacio Villasuso,Vitoria-Gasteiz,Pza. del Machete,150,130,mull,945161100,Dirección,info@vitoria-gasteiz.eus
+27,Auditorio Kursaal,San Sebastián,"Av. Zurriola, 1",1800,1700,mull,943003000,Gestión,info@kursaal.eus
+28,Bilbao Arena,Bilbao,Askatasuna Etorbidea,10000,8000,mull,944795300,Eventos,bilbaoarena@bilbao.eus
+29,Claustro San Telmo,San Sebastián,Pza. Zuloaga, 1,250,200,mull,943481580,Eventos,santelmo@donostia.eus
+30,Centro Cívico Aldabe,Vitoria-Gasteiz,Portal de Arriaga, 1A,300,250,mull,945161750,Info,alda@vitoria-gasteiz.eus
+31,Hotel Palacio de Aiete,San Sebastián,P. de Aiete, 71,200,180,mull,943214433,Recepción,info@hotelaiete.com
+32,Museo Diocesano,Bilbao,Pza. de la Encarnación,200,180,mull,944320126,Info,museodiocesano@bizkeliza.org
+33,Palacio Orueta,Bilbao,Alameda Recalde,150,130,mull,944240000,Administración,info@bilbao.eus
+34,Palacio Escoriaza,Vitoria-Gasteiz,C. Herrería, 10,100,80,mull,945161000,Recepción,info@vitoria-gasteiz.eus
+35,Sala Multiusos BEC,Barakaldo,Ansio Etorbidea,5000,4000,mull,944040000,Operaciones,bec@bec.eu
+36,Salón Real Miramar,San Sebastián,P. de Miraconcha,150,120,mull,943219022,Eventos,miramar@donostia.eus
+37,Edificio Ensanche,Bilbao,Pza. Ensanche, 11,200,180,mull,944204900,Info,info@bilbao.eus
+38,Hotel Jardines de Uleta,Vitoria-Gasteiz,C. Uleta, 1,150,130,mull,945134411,Eventos,info@jardinesdeuleta.com
+39,Plaza Tabakalera,San Sebastián,"Pza. Nestor Barea, 1",300,250,mull,943011311,Gestión,info@tabakalera.eus
+40,Auditorio Artium,Vitoria-Gasteiz,"C. de Francia, 24",200,180,mull,945209020,Eventos,info@artium.eus

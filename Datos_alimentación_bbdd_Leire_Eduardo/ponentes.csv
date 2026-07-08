@@ -1,0 +1,42 @@
+Fragmento de código
+id_ponente,nombre_ponente,doc_identificacion,email,sector,telefono,foto_link,cv_link,empresa,cargo
+1,Carlos Barrabés,12345678A,c.barrabes@innovacion.es,Tecnología,600111222,mull,mull,Barrabés,CEO
+2,María Benjumea,87654321B,m.benjumea@spainstartup.es,Emprendimiento,600333444,mull,mull,South Summit,Fundadora
+3,Marc Vidal,11223344C,contacto@marcvidal.net,Economía Digital,600555666,mull,mull,Allrework,Consultor
+4,Nuria Oliver,99887766D,n.oliver@ellicailab.es,IA / Ciencia,600777888,mull,mull,ELLA,Directora
+5,Javier Goyeneche,55443322E,info@ecoalf.com,Sostenibilidad,600999000,mull,mull,Ecoalf,Fundador
+6,Elena Pisonero,44556677F,e.pisonero@talantera.com,Economía,601111222,mull,mull,Talantera,Analista
+7,Pablo Foncillas,33445566G,p.foncillas@ie.edu,Marketing,601333444,mull,mull,IE Business School,Profesor
+8,Pilar Jericó,22334455H,p.jerico@be-up.es,Liderazgo,601555666,mull,mull,Be-Up,Socia
+9,Ferran Adrià,66778899I,info@elbulli.com,Gastronomía,601777888,mull,mull,El Bulli Foundation,Chef
+10,Juan Verde,99001122J,info@juanverde.com,Cambio Climático,601999000,mull,mull,Fundación Juan Verde,Presidente
+11,Silvina Moschini,77665544K,s.moschini@unico.com,Tecnología,602111222,mull,mull,Unico,Fundadora
+12,Chema Alonso,55667788L,c.alonso@telefonica.com,Ciberseguridad,602333444,mull,mull,Telefónica,CDO
+13,Josef Ajram,88990011M,j.ajram@ajram.es,Finanzas,602555666,mull,mull,Ajram Capital,Trader
+14,Elsa Punset,22113344N,e.punset@educacion.es,Inteligencia Emocional,602777888,mull,mull,Escritora,Divulgadora
+15,Emilio Duró,44332211O,e.duro@optimismo.es,Motivación,602999000,mull,mull,Itera,Consultor
+16,Víctor Küppers,77889900P,v.kuppers@kuppers.com,Psicología Positiva,603111222,mull,mull,Küppers,Consultor
+17,Laura González,11559922Q,l.gonzalez@tech.es,Analítica de datos,603333444,mull,mull,TechData,Directora
+18,Luis Martín,22660033R,l.martin@energia.es,Energías Renovables,603555666,mull,mull,Iberdrola,Ingeniero
+19,Ana Torres,33771144S,a.torres@salud.es,Biotecnología,603777888,mull,mull,BioHealth,Investigadora
+20,David Ruiz,44882255T,d.ruiz@logistica.es,Logística,603999000,mull,mull,Logitrans,Director
+21,Carmen López,55993366U,c.lopez@legal.es,Derecho Mercantil,604111222,mull,mull,López&Asoc,Abogada
+22,Roberto Gil,66004477V,r.gil@retail.es,Retail,604333444,mull,mull,RetailGroup,Manager
+23,Sara Mendoza,77115588W,s.mendoza@turismo.es,Turismo,604555666,mull,mull,BasqueTour,Directora
+24,Jorge Castro,88226699X,j.castro@banca.es,Banca,604777888,mull,mull,Kutxabank,Director
+25,Isabel Sanz,99337700Y,i.sanz@educa.es,Educación,604999000,mull,mull,UPV/EHU,Profesora
+26,Pedro Cano,11448811Z,p.cano@media.es,Comunicación,605111222,mull,mull,CanoMedia,Director
+27,Lucia Vega,22559922A,l.vega@rrhh.es,Recursos Humanos,605333444,mull,mull,PeopleConsulting,Consultora
+28,Mario Soler,33660033B,m.soler@seguros.es,Seguros,605555666,mull,mull,SegurPlus,Manager
+29,Teresa Díaz,44771144C,t.diaz@arquitectura.es,Arquitectura,605777888,mull,mull,DíazArq,Arquitecta
+30,Alberto Paz,55882255D,a.paz@aero.es,Aeronáutica,605999000,mull,mull,AeroBiz,Ingeniero
+31,Marta Lillo,66993366E,m.lillo@artes.es,Diseño,606111222,mull,mull,LilloDesign,Diseñadora
+32,Hugo Rey,77004477F,h.rey@deporte.es,Gestión Deportiva,606333444,mull,mull,Kirolkude,Gestor
+33,Sofia Real,88115588G,s.real@moda.es,Moda,606555666,mull,mull,BasqueFashion,Diseñadora
+34,Diego Ríos,99226699H,d.rios@agri.es,Agricultura,606777888,mull,mull,AgroNorte,Técnico
+35,Clara Sol,11337700I,c.sol@hosteleria.es,Hostelería,606999000,mull,mull,HotelesBasque,Gerente
+36,Jaime Oro,22448811J,j.oro@fin.es,Inversión,607111222,mull,mull,InverBasque,Analista
+37,Paula Mar,33559922K,p.mar@cultura.es,Gestión Cultural,607333444,mull,mull,KulturaGunea,Gestora
+38,Fernando Val,44660033L,f.val@auto.es,Automoción,607555666,mull,mull,AutoBiz,Director
+39,Natalia Sun,55771144M,n.sun@renovable.es,Energía Solar,607777888,mull,mull,SunPower,Ingeniera
+40,Oscar Bay,66882255N,o.bay@constru.es,Construcción,607999000,mull,mull,ConstruNorte,Gerente
