@@ -1,0 +1,17 @@
+{
+  "id_evento": 12,
+  "id_registro": null,
+  "tipo_peticion": "consultar_datos_evento",
+  "origen": "demo",
+  "usuario_solicitante": "raul",
+  "rol_usuario": "organizador",
+  "datos": {
+    "pregunta": "¿qué ponentes no han subido el billete de vuelta?"
+  },
+  "contexto": {
+    "fase_evento": "ponentes",
+    "fecha_evento": "2026-09-15",
+    "estado_evento": "en_preparacion"
+  },
+  "modo": "consulta"
+}
