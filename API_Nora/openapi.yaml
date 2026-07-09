@@ -1,0 +1,550 @@
+openapi: "3.0.3"
+info:
+  title: API Proyecto Tripulaciones
+  description: API backend del ERP de Eventos
+  version: "0.0.1"
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Desarrollo local
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    OkResponse:
+      type: object
+      properties:
+        ok: { type: boolean, example: true }
+        msg: { type: string, example: "Has accedido a obtener todos los eventos" }
+        filters: { type: object }
+        data: { type: object }
+
+    ErrorResponse:
+      type: object
+      properties:
+        ok: { type: boolean, example: false }
+        msg: { type: string, example: "Evento no encontrado" }
+
+    ValidationError:
+      type: object
+      properties:
+        ok: { type: boolean, example: false }
+        msg: { type: string, example: "Error de validacion" }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              msg: { type: string }
+              path: { type: string }
+              type: { type: string }
+
+    UUID:
+      type: string
+      format: uuid
+      example: bdfe40ca-70e8-4fe6-8907-df4a5a7bd3e6
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      responses:
+        "200":
+          description: Servidor operativo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /debug/force-error:
+    get:
+      tags: [Debug]
+      summary: Fuerza un error (solo development)
+      responses:
+        "500":
+          description: Error interno simulado
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Iniciar sesión con Firebase
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+          example: "Bearer <firebase_id_token>"
+      responses:
+        "200":
+          description: Sesión iniciada, JWT en cookie httpOnly
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  user:
+                    type: object
+                    properties:
+                      userId: { type: string }
+                      name: { type: string }
+                      email: { type: string }
+                      role: { type: string }
+        "400":
+          description: Token no enviado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Token inválido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/verify:
+    get:
+      tags: [Auth]
+      summary: Verificar sesión activa
+      responses:
+        "200":
+          description: Sesión válida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "401":
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Cerrar sesión
+      responses:
+        "200":
+          description: Sesión cerrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /upload:
+    post:
+      tags: [Upload]
+      summary: Subir archivo a Cloudinary
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Archivo a subir (jpg, png, gif, pdf, ppt, doc, hasta 10MB)
+      responses:
+        "200":
+          description: Archivo subido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  file:
+                    type: object
+                    properties:
+                      filename: { type: string }
+                      originalname: { type: string }
+                      path: { type: string }
+                      size: { type: number }
+                      mimetype: { type: string }
+
+  /eventos:
+    get:
+      tags: [Eventos]
+      summary: Listar/filtrar eventos
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: ciudad
+          schema: { type: string }
+        - in: query
+          name: tipo_evento
+          schema: { type: string }
+        - in: query
+          name: estado
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista de eventos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+    post:
+      tags: [Eventos]
+      summary: Crear evento
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre: { type: string }
+      responses:
+        "200":
+          description: Evento creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          description: Error de validación
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /eventos/{id}:
+    get:
+      tags: [Eventos]
+      summary: Obtener evento por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: Evento encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+    patch:
+      tags: [Eventos]
+      summary: Actualizar evento
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: Evento actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+    delete:
+      tags: [Eventos]
+      summary: Eliminar evento
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: Evento eliminado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /clientes:
+    get:
+      tags: [Clientes]
+      summary: Listar/filtrar clientes
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: sector
+          schema: { type: string }
+        - in: query
+          name: ciudad
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista de clientes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+    post:
+      tags: [Clientes]
+      summary: Crear cliente
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre, correo]
+              properties:
+                nombre: { type: string }
+                correo: { type: string, format: email }
+      responses:
+        "200":
+          description: Cliente creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /clientes/{id}:
+    get:
+      tags: [Clientes]
+      summary: Obtener cliente por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: Cliente encontrado
+
+    patch:
+      tags: [Clientes]
+      summary: Actualizar cliente
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: Cliente actualizado
+
+    delete:
+      tags: [Clientes]
+      summary: Eliminar cliente
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: Cliente eliminado
+
+  /espacios:
+    get:
+      tags: [Espacios]
+      summary: Listar/filtrar espacios
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: ciudad
+          schema: { type: string }
+        - in: query
+          name: aforo
+          schema: { type: integer, minimum: 0 }
+      responses:
+        "200":
+          description: Lista de espacios
+
+    post:
+      tags: [Espacios]
+      summary: Crear espacio
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre: { type: string }
+      responses:
+        "200":
+          description: Espacio creado
+
+  /espacios/{id}:
+    get:
+      tags: [Espacios]
+      summary: Obtener espacio por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: Espacio encontrado
+
+    patch:
+      tags: [Espacios]
+      summary: Actualizar espacio
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: Espacio actualizado
+
+    delete:
+      tags: [Espacios]
+      summary: Eliminar espacio
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: Espacio eliminado
+
+  /ponentes:
+    get:
+      tags: [Ponentes]
+      summary: Listar/filtrar ponentes
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: sector
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista de ponentes
+
+    post:
+      tags: [Ponentes]
+      summary: Crear ponente (con foto)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre:
+                  type: string
+                  description: Nombre del ponente
+                file:
+                  type: string
+                  format: binary
+                  description: Foto de perfil (opcional)
+      responses:
+        "200":
+          description: Ponente creado
+
+  /ponentes/{id}:
+    get:
+      tags: [Ponentes]
+      summary: Obtener ponente por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: Ponente encontrado
+
+    patch:
+      tags: [Ponentes]
+      summary: Actualizar ponente (con foto)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+                  description: Nueva foto de perfil (opcional)
+      responses:
+        "200":
+          description: Ponente actualizado
+
+    delete:
+      tags: [Ponentes]
+      summary: Eliminar ponente
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: Ponente eliminado
