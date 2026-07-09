@@ -100,4 +100,4 @@ estados:
 
 **Propuestas:**
 
-- incluir campo de ciudad de origen en la tabla del ponente
+
