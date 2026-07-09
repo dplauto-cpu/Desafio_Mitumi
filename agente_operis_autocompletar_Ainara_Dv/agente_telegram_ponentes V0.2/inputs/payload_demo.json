@@ -1,0 +1,20 @@
+{
+  "id_evento": 10,
+  "id_registro": null,
+  "tipo_peticion": "responder_consulta_ponente_telegram",
+  "origen": "demo",
+  "usuario_solicitante": "111111",
+  "rol_usuario": "ponente",
+  "datos": {
+    "telegram_user_id": "111111",
+    "telegram_chat_id": "111111",
+    "nombre_usuario": "Ana",
+    "texto": "¿En qué hotel me alojo?"
+  },
+  "contexto": {
+    "fase_evento": "ponentes",
+    "canal": "telegram",
+    "estado_evento": "en_preparacion"
+  },
+  "modo": "simulacion"
+}

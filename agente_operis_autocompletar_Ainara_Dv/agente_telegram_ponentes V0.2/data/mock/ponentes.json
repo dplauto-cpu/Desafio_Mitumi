@@ -1,0 +1,15 @@
+[
+  {
+    "id_ponente": 1,
+    "nombre": "Juan Jesus Garcia Gonzalez",
+    "telegram_user_id": "8907670673",
+    "email": "juan.demo@mitumi.local",
+    "telefono_contacto": "+34XXXXXXXXX"
+  },
+  {
+    "id_ponente": 2,
+    "nombre": "Luis Martín",
+    "telegram_user_id": "222222",
+    "email": "luis@example.com"
+  }
+]

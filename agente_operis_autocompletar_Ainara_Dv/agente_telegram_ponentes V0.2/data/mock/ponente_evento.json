@@ -1,0 +1,47 @@
+[
+  {
+    "id_ponente": 1,
+    "id_evento": 10,
+    "nombre_evento": "Jornada Empresa Vitoria",
+    "hotel": "Hotel NH Aránzazu. Habitación individual con desayuno",
+    "direccion_hotel": "Vitoria-Gasteiz Kalea, 1, 20018 Donostia / San Sebastián, Gipuzkoa",
+    "viaje": "Vuelo Vigo - San Sebastián. Taxi reservado a la llegada",
+    "vuelo": "VIGO - San Sebastián. Lunes 1 de junio, 09:20 - 13:00. IBERIA IB0466 / IB0445. Regreso San Sebastián - Vigo. Martes 2 de junio, 17:55 - 22:30. VUELING VY2487",
+    "taxi_llegada": "A tu llegada a San Sebastián, un taxi con tu nombre te esperará en la salida y te llevará directamente al hotel",
+    "taxi_salida": "El día 2 de junio, un taxi te recogerá a las 16:00 en el hotel y te llevará directamente al aeropuerto",
+    "horario_ponencia": "12:30",
+    "lugar": "Vital Fundazioa Kulturunea, Paz 5, 1ª planta, 01005 Vitoria-Gasteiz",
+    "sala": "Sala principal",
+    "documentos_pendientes": ["presentación final"]
+  },
+  {
+    "id_ponente": 2,
+    "id_evento": 10,
+    "nombre_evento": "Jornada Empresa Vitoria",
+    "hotel": "Hotel Ciudad de Vitoria",
+    "direccion_hotel": "Pendiente de confirmar",
+    "viaje": "Tren Madrid - Vitoria. Pendiente de billete final",
+    "vuelo": null,
+    "taxi_llegada": "Pendiente de confirmar",
+    "taxi_salida": "Pendiente de confirmar",
+    "horario_ponencia": "10:00",
+    "lugar": "Vital Fundazioa Kulturunea, Paz 5, 1ª planta, 01005 Vitoria-Gasteiz",
+    "sala": "Sala principal",
+    "documentos_pendientes": ["foto", "CV"]
+  },
+  {
+    "id_ponente": 2,
+    "id_evento": 11,
+    "nombre_evento": "Congreso Bilbao",
+    "hotel": "Pendiente de confirmación",
+    "direccion_hotel": "Pendiente de confirmación",
+    "viaje": "Pendiente de confirmación",
+    "vuelo": null,
+    "taxi_llegada": "Pendiente de confirmación",
+    "taxi_salida": "Pendiente de confirmación",
+    "horario_ponencia": "16:00",
+    "lugar": "BEC Bilbao",
+    "sala": "Pendiente de confirmar",
+    "documentos_pendientes": []
+  }
+]

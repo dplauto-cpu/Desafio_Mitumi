@@ -1,0 +1,23 @@
+[
+  {
+    "id_ponente": 1,
+    "id_evento": 10,
+    "nombre_evento": "Jornada Empresa Vitoria",
+    "estado": "activo",
+    "fecha": "2026-07-17"
+  },
+  {
+    "id_ponente": 2,
+    "id_evento": 10,
+    "nombre_evento": "Jornada Empresa Vitoria",
+    "estado": "activo",
+    "fecha": "2026-07-17"
+  },
+  {
+    "id_ponente": 2,
+    "id_evento": 11,
+    "nombre_evento": "Congreso Bilbao",
+    "estado": "activo",
+    "fecha": "2026-07-25"
+  }
+]

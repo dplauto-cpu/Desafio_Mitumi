@@ -1,0 +1,8 @@
+.env
+*.log
+__pycache__/
+*.pyc
+outputs/respuestas_json/*.json
+outputs/borradores/*.md
+outputs/informes/*.md
+data/rag/indice/
