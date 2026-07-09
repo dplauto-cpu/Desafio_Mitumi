@@ -142,7 +142,7 @@ Límites propios de Lumen (más estrictos que la base común, por ser agente de 
 
 ---
 
-## 5–7. Estructura del agente
+## 5. Estructura del agente
 
 Árbol real de `lumen_agente_04/` (verificado sobre el disco, no aspiracional — se omiten los
 `__pycache__/` que genera Python automáticamente al ejecutar):
@@ -221,7 +221,7 @@ son el contrato obligatorio del proyecto (seccion 1) y no cambian. La logica en 
 `src/nucleo.py` para mantener el fichero de contrato lo mas simple y estable posible; `agente.py`
 solo hace `from src.nucleo import ejecutar_agente`.
 
-## 8. Archivo `.env`
+## 6. Archivo `.env`
 
 Ver `.env.example` para la plantilla completa (sin secretos). Variables clave:
 
@@ -242,7 +242,7 @@ TABLAS_EXCLUIDAS=usuarios
 `.gitignore` debe incluir `.env`, `*.log`, `outputs/`, `data/rag/indice/`. La API key vive solo en
 `.env` (nunca en `.env.example`, nunca hardcodeada en `src/llm.py` ni en ningun otro archivo).
 
-## 9. Contrato de entrada — adaptación para Lumen
+## 7. Contrato de entrada — adaptación para Lumen
 
 - `id_evento` puede ser `null` cuando la consulta es transversal a varios eventos (ej. métricas
   globales) — el campo se mantiene en el contrato, pero se documenta explícitamente esta excepción.
@@ -256,7 +256,7 @@ Ver `inputs/payload_demo.json` para el payload real que usa `main.py`.
 
 ---
 
-## 10. Contrato de salida — adaptación para Lumen
+## 8. Contrato de salida — adaptación para Lumen
 
 ```json
 {
@@ -284,7 +284,7 @@ lo fuerza en código, no solo por prompt.
 
 ---
 
-## 11. Esquema de datos de referencia
+## 9. Esquema de datos de referencia
 
 Ver `data/rag/documentos/esquema_bd.md` para el detalle completo de tablas, campos, relaciones y la
 exclusión dura de la tabla `usuarios`. `src/consultas.py` usa exactamente esos mismos nombres sobre los
@@ -292,7 +292,7 @@ datos mock.
 
 ---
 
-## 12. Flujo interno implementado
+## 10. Flujo interno implementado
 
 ```text
 1. main.py lee inputs/payload_demo.json y llama a ejecutar_agente(payload) (src/agente.py).
@@ -322,7 +322,7 @@ ni decide que tabla consultar; solo redacta la respuesta en lenguaje natural a p
 ya se le entrega, ya filtrado. Esto es intencional: aunque el LLM fallase o fuese manipulado, no puede
 saltarse las restricciones de acceso a datos.
 
-## 13. Prompts
+## 11. Prompts
 
 ```text
 prompts/
@@ -334,7 +334,7 @@ prompts/
 
 ---
 
-## 14–15. RAG, datos e integraciones
+## 12. RAG, datos e integraciones
 
 ```text
 data/rag/documentos/esquema_bd.md   ← esquema de tablas/campos (fuente única de verdad)
@@ -346,7 +346,7 @@ Las integraciones de Lumen solo leen. No existe ninguna integración de escritur
 
 ---
 
-## 16. Modo seguro por defecto
+## 13. Modo seguro por defecto
 
 ```python
 ALLOW_DB_WRITE = False          # fijo en config/permisos.py, no configurable para Lumen
@@ -362,7 +362,7 @@ restricción arquitectónica permanente, reforzada en `config/permisos.py` y ver
 
 ---
 
-## 17–18. Ejecución local
+## 14. Ejecución local
 
 ```bash
 cd lumen_agente_04
@@ -388,7 +388,7 @@ para el contrato de `POST /chat` y `POST /chat/reset`.
 
 ---
 
-## 19. Casos de fallo específicos de Lumen
+## 15. Casos de fallo específicos de Lumen
 
 | Fallo | Comportamiento esperado |
 |---|---|
@@ -402,7 +402,7 @@ para el contrato de `POST /chat` y `POST /chat/reset`.
 
 ---
 
-## 20. Checklist final
+## 16. Checklist final
 
 - [x] Existe `README.md` (este archivo).
 - [x] Existe `.env.example` sin secretos, y `.env` real con la API key de Groq (no versionado).
