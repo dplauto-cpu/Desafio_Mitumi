@@ -1,0 +1,12 @@
+# Motor de reglas (por defecto, gratis): src/funciones.py, src/schemas.py
+# y config/settings.py solo usan la librería estándar de Python (re, os,
+# json, pathlib) — sin dependencias externas, ni siquiera para leer .env.
+#
+# Dependencias OPCIONALES:
+
+# groq            # motor LLM (OPERIS_MOTOR=llm / --motor llm). Requiere
+#                 # además GROQ_API_KEY (.env).
+
+# pypdf>=4.0          # lectura de .pdf
+# python-docx>=1.1    # lectura de .docx
+# tiktoken            # solo para regenerar docs/estimacion_tokens.py

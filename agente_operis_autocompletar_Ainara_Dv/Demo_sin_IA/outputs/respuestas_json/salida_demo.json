@@ -1,0 +1,72 @@
+{
+  "ok": true,
+  "agente": "agente_operis",
+  "tipo_peticion": "extraer_briefing",
+  "resumen": "Se ha cumplimentado información en las pestañas Evento, Cliente, Espacio, Sala y Presupuesto. Requiere validación.",
+  "datos_detectados": {
+    "evento": {
+      "nombre_evento": "Congreso Anual de Innovación Digital",
+      "ciudad": "Madrid",
+      "lugar_confirmado": "Hotel Marriott Auditorium",
+      "fecha_inicio": "15/10/2026",
+      "fecha_fin": "17/10/2026",
+      "numero_personas": "350",
+      "tipo_evento": "Congreso",
+      "estado": "",
+      "nota": ""
+    },
+    "cliente": {
+      "cliente": "Laura Martínez",
+      "empresa": "TechCorp S.L.",
+      "email": "laura.martinez@techcorp.es",
+      "telefono": "600 123 456",
+      "sector": "",
+      "ciudad": "Madrid"
+    },
+    "espacio": {
+      "nombre_espacio": "Hotel Marriott Auditorium",
+      "ciudad": "Madrid",
+      "direccion": "",
+      "capacidad_total": "",
+      "aforo": "",
+      "nota": "",
+      "telefono_contacto": "",
+      "nombre_contacto": "",
+      "email_contacto": ""
+    },
+    "sala": {
+      "nombre_sala": "",
+      "tipo": "",
+      "capacidad_max_sala": "350",
+      "nota_sala": ""
+    },
+    "presupuesto": {
+      "estado_presupuesto": "Pendiente",
+      "total": "45000",
+      "fecha": "",
+      "nota_ubicacion": "",
+      "precio_ubicacion": "",
+      "precio_catering": "",
+      "precio_audiovisuales": "",
+      "precio_otros": "",
+      "nota_catering": "",
+      "nota_audiovisuales": "",
+      "nota_otros": "",
+      "observaciones": "Servicios solicitados: Catering, Audiovisuales, Streaming y Traducción"
+    },
+    "ponentes": []
+  },
+  "acciones_propuestas": [],
+  "bloqueos_detectados": [],
+  "borradores_generados": [],
+  "requiere_validacion_humana": true,
+  "nivel_riesgo": "bajo",
+  "errores": [],
+  "trazas": {
+    "fuentes_consultadas": [
+      "motor:reglas"
+    ],
+    "timestamp": "2026-07-09T11:06:22",
+    "modo": "propuesta"
+  }
+}

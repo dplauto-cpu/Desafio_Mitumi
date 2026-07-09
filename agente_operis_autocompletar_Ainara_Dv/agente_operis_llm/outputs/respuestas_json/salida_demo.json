@@ -1,0 +1,20 @@
+{
+  "ok": false,
+  "agente": "agente_operis",
+  "tipo_peticion": "extraer_briefing",
+  "resumen": "Error al extraer el briefing con el motor 'llm': Falta GROQ_API_KEY. Defínela en .env (o pásala como argumento) antes de usar el motor LLM. El motor de reglas (src.funciones.extraer_briefing) sigue disponible sin clave.",
+  "datos_detectados": {},
+  "acciones_propuestas": [],
+  "bloqueos_detectados": [],
+  "borradores_generados": [],
+  "requiere_validacion_humana": true,
+  "nivel_riesgo": "bajo",
+  "errores": [
+    "Falta GROQ_API_KEY. Defínela en .env (o pásala como argumento) antes de usar el motor LLM. El motor de reglas (src.funciones.extraer_briefing) sigue disponible sin clave."
+  ],
+  "trazas": {
+    "fuentes_consultadas": [],
+    "timestamp": "2026-07-09T12:33:15",
+    "modo": "propuesta"
+  }
+}
