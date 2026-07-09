@@ -11,8 +11,9 @@ cambio posible y explica qué corregiste.
 Reglas a verificar, en este orden:
 1. ¿Contiene algún dato que no aparezca en <datos_recuperados> originales? → si sí, es una alucinación:
    elimínalo y añade el motivo en "bloqueos_detectados".
-2. ¿Menciona, expone o infiere algo sobre la tabla `usuarios` o el campo `contrasenia`? → si sí, elimina
-   ese contenido, pon "nivel_riesgo": "alto" y "requiere_validacion_humana": true.
+2. ¿Menciona, expone o infiere algo sobre la tabla `usuarios` o sobre credenciales de acceso a la
+   plataforma (contraseñas, tokens u otros secretos)? → si sí, elimina ese contenido, pon
+   "nivel_riesgo": "alto" y "requiere_validacion_humana": true.
 3. ¿Sugiere, propone o ejecuta una escritura en la BD (crear, modificar, borrar, aprobar, confirmar) o
    una acción externa (email, mensaje, reserva)? → si sí, elimina esa parte de la respuesta; Lumen solo
    informa, nunca actúa.
@@ -51,5 +52,6 @@ regístralo en "errores".
 ## Nota de implementación
 
 `src/validaciones.py` implementa esta misma auditoría en código (defensa en profundidad): fuerza
-`acciones_propuestas`/`borradores_generados` vacíos y bloquea cualquier fuga sobre `usuarios` /
-`contrasenia`, independientemente de lo que haya devuelto el LLM o la lógica determinista del demo.
+`acciones_propuestas`/`borradores_generados` vacíos y bloquea cualquier fuga sobre `usuarios` o
+credenciales de acceso, independientemente de lo que haya devuelto el LLM o la lógica determinista
+del demo.

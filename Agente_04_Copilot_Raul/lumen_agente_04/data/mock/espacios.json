@@ -1,10 +1,9 @@
 [
   {
-    "id_espacio": 2,
+    "id": 2,
     "nombre_espacio": "Palacio de Congresos Norte",
     "ciudad": "Madrid",
     "direccion": "Calle Falsa 123",
-    "capacidad_total": 500,
     "aforo": 450,
     "nota": "",
     "telefono_contacto": "+34911222333",

@@ -20,7 +20,7 @@ TABLAS_PERMITIDAS = {
     "eventos",
     "presupuestos",
     "ponentes",
-    "evento_ponente",
+    "ponencias",
     "estados",
     "salas",
     "espacios",

@@ -3,11 +3,14 @@ Auditoria final de la salida de Lumen - equivalente en codigo a prompts/prompt_v
 
 Se ejecuta SIEMPRE antes de devolver la respuesta al orquestador, tanto en el flujo determinista
 de este demo como (en produccion) sobre la salida del LLM. Es la ultima linea de defensa contra:
-  - fuga de la tabla `usuarios` / campo `contrasenia`
+  - fuga de la tabla `usuarios` o de credenciales de acceso a la plataforma
   - que Lumen proponga o redacte una accion de escritura (no le corresponde)
+
+Nota: no se asume un nombre de campo concreto para la credencial (el esquema actual no lo
+documenta) - el filtro bloquea por la tabla `usuarios` y por terminos genericos de credencial.
 """
 
-PALABRAS_PROHIBIDAS = ["usuarios", "contrasenia", "contraseña", "password"]
+PALABRAS_PROHIBIDAS = ["usuarios", "contraseña", "password", "credencial"]
 
 
 def auditar_salida(salida: dict) -> dict:

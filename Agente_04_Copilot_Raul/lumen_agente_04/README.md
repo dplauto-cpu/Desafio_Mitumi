@@ -93,9 +93,9 @@ Lumen es el copiloto conversacional del equipo interno de Mitumi para consultar 
 plataforma Ágora sin tener que abrir la base de datos o pedírselo a otra persona.
 
 ```text
-Un organizador pregunta "¿qué ponentes del evento X todavía no han subido su presentación?" y Lumen
-responde con los nombres, cruzando evento_ponente.presentacion_link vacío con ponentes.nombre_ponente,
-citando de dónde sale el dato si se le pide.
+Un organizador pregunta "¿el ponente del evento X todavía no ha subido su presentación?" y Lumen
+responde, cruzando ponencias.presentacion_link vacío (vía eventos.id_ponencia) con
+ponentes.nombre_ponente, citando de dónde sale el dato si se le pide.
 ```
 
 ### Capacidades principales
@@ -112,7 +112,7 @@ citando de dónde sale el dato si se le pide.
 
 - "¿Cuál es el presupuesto total aprobado para los eventos de este trimestre en Madrid?"
 - "¿Qué sala tiene mayor aforo disponible para un evento de 300 personas en Barcelona?"
-- "Del evento 12, ¿qué ponentes tienen pendiente el billete de vuelta?"
+- "Del evento 12, ¿el ponente tiene pendiente el billete de vuelta?"
 
 ---
 
@@ -133,8 +133,8 @@ Límites propios de Lumen (más estrictos que la base común, por ser agente de 
 
 - nunca genera ni sugiere sentencias de escritura (INSERT/UPDATE/DELETE/ALTER), ni siquiera como
   ejemplo o borrador;
-- nunca consulta la tabla `usuarios` ni expone el campo `contrasenia` — exclusión dura, ver
-  `data/rag/documentos/esquema_bd.md`;
+- nunca consulta la tabla `usuarios` ni expone credenciales de acceso a la plataforma — exclusión
+  dura, ver `data/rag/documentos/esquema_bd.md`;
 - no redacta borradores de comunicación (email, mensaje) — eso es competencia de Hermes (03), no de
   Lumen; si el usuario lo pide, Lumen lo redirige;
 - no genera exportaciones masivas de datos personales (email, teléfono, documento de identificación)
@@ -157,7 +157,6 @@ lumen_agente_04/
 ├── servidor.py                 ← API HTTP (Flask) para el frontend React: memoria por sesion
 ├── requirements.txt             ← openai (Groq) + flask/flask-cors (solo hace falta para servidor.py)
 ├── .env                       ← secretos reales (Groq API key) - NO se sube al repo
-├── .env.example               ← plantilla sin secretos
 │
 ├── config/
 │   ├── __init__.py
@@ -198,7 +197,7 @@ lumen_agente_04/
 │   │   ├── eventos.json
 │   │   ├── presupuestos.json
 │   │   ├── ponentes.json
-│   │   ├── evento_ponente.json
+│   │   ├── ponencias.json
 │   │   ├── estados.json
 │   │   ├── salas.json
 │   │   └── espacios.json
@@ -263,8 +262,8 @@ Ver `inputs/payload_demo.json` para el payload real que usa `main.py`.
   "ok": true,
   "agente": "lumen_copilot",
   "tipo_peticion": "consultar_datos_evento",
-  "resumen": "El evento 12 tiene 2 ponentes sin billete de vuelta: Ana Ruiz y Marc Solé.",
-  "datos_detectados": { "ponentes_sin_billete_vuelta": ["Ana Ruiz", "Marc Solé"] },
+  "resumen": "El evento 12 tiene 1 ponente sin billete de vuelta: Ana Ruiz.",
+  "datos_detectados": { "ponentes_sin_billete_vuelta": ["Ana Ruiz"] },
   "acciones_propuestas": [],
   "bloqueos_detectados": [],
   "borradores_generados": [],
@@ -272,7 +271,7 @@ Ver `inputs/payload_demo.json` para el payload real que usa `main.py`.
   "nivel_riesgo": "bajo",
   "errores": [],
   "trazas": {
-    "fuentes_consultadas": ["evento_ponente.billete_vuelta_link", "ponentes.nombre_ponente"],
+    "fuentes_consultadas": ["ponencias.billete_vuelta_link", "ponentes.nombre_ponente"],
     "timestamp": "2026-07-08T09:00:00",
     "modo": "consulta"
   }
@@ -289,6 +288,38 @@ lo fuerza en código, no solo por prompt.
 Ver `data/rag/documentos/esquema_bd.md` para el detalle completo de tablas, campos, relaciones y la
 exclusión dura de la tabla `usuarios`. `src/consultas.py` usa exactamente esos mismos nombres sobre los
 datos mock.
+
+---
+
+## 9 bis. Fuente de datos: mock vs. API real "Proyecto Tripulaciones"
+
+Lumen puede leer de dos sitios, controlado por `USAR_API_TRIPULACIONES` en `.env` (por defecto `False`):
+
+- **`False` (modo demo, por defecto):** todo sale de `data/mock/*.json`, como hasta ahora.
+- **`True` (modo híbrido):** `eventos`, `clientes`, `espacios` y `ponentes` se leen de la API real
+  descrita en `openapi.yaml` (`integrations/api_backend.py`, solo verbos `GET`). `salas`,
+  `presupuestos`, `estados` y `ponencias` **siguen leyéndose siempre del mock**, porque esa API no
+  expone endpoints para ellas todavía.
+
+Limitaciones conocidas del modo híbrido, no son bugs:
+
+- Los `id` de la API real son **UUID**; los de las 4 tablas que siguen en mock son enteros. Si un
+  evento real trae `id_sala` / `id_presupuesto` / `id_ponencia`, ese valor no va a coincidir con los
+  ids enteros del mock hasta que esas tablas tengan su propio endpoint — `contexto_completo_evento`
+  simplemente devuelve `None` para esa parte, en vez de fallar.
+- Todos los endpoints de esa API exigen `Bearer JWT` (login con Firebase, ver `openapi.yaml`). Lumen
+  no hace ese login: usa un token de cuenta de servicio ya emitido, configurado en
+  `API_TRIPULACIONES_TOKEN` (`.env`). Si el token caduca o no está configurado, `ejecutar_agente`
+  devuelve un bloqueo (`nivel_riesgo: "medio"`) en vez de fallar o inventar datos — ver
+  `integrations/api_backend.py::ApiBackendError` y su manejo en `src/nucleo.py`.
+- `openapi.yaml` no fija la forma exacta del campo `data` en sus respuestas (solo `type: object`).
+  `_get()` en `integrations/api_backend.py` tolera tanto una lista directa como un dict que la
+  envuelva bajo una única clave — a confirmar y ajustar cuando la API esté levantada de verdad.
+- Aunque esa API expone `POST`/`PATCH`/`DELETE` sobre estos mismos recursos, `integrations/api_backend.py`
+  solo implementa `GET`: Lumen sigue siendo de solo lectura por diseño, no por límite técnico.
+
+Pendiente de cerrar con el equipo de backend: endpoints de solo lectura para `salas`, `presupuestos`,
+`estados` y `ponencias`, y la cuenta de servicio con la que Lumen se autentica.
 
 ---
 
@@ -312,8 +343,8 @@ datos mock.
    - si el LLM no esta configurado, falla, o no devuelve JSON valido, se hace fallback automatico
      al resumen determinista del evento - Lumen nunca se queda sin responder por un fallo del LLM.
 5. src/validaciones.py audita SIEMPRE la salida final (venga del LLM o de las reglas): fuerza
-   acciones_propuestas/borradores_generados vacios y bloquea cualquier fuga sobre
-   `usuarios`/`contrasenia`, incluso si el LLM alucinase o el usuario intentase manipular el prompt.
+   acciones_propuestas/borradores_generados vacios y bloquea cualquier fuga sobre `usuarios` o
+   credenciales de acceso, incluso si el LLM alucinase o el usuario intentase manipular el prompt.
 6. main.py imprime el resultado y lo guarda en outputs/respuestas_json/salida_demo.json.
 ```
 
@@ -393,7 +424,7 @@ para el contrato de `POST /chat` y `POST /chat/reset`.
 | Fallo | Comportamiento esperado |
 |---|---|
 | Falta `id_evento` en una consulta que sí lo necesita | `bloqueos_detectados` pidiendo el evento, no se adivina |
-| Se pregunta por la tabla `usuarios` o por `contrasenia` | Bloqueo inmediato, `nivel_riesgo: "alto"`, `requiere_validacion_humana: true`, no se toca la BD |
+| Se pregunta por la tabla `usuarios` o por credenciales de acceso | Bloqueo inmediato, `nivel_riesgo: "alto"`, `requiere_validacion_humana: true`, no se toca la BD |
 | Se pide una escritura disfrazada de pregunta ("¿puedes subir el presupuesto un 10%?") | Se bloquea la parte de escritura |
 | El dato no existe en los datos disponibles | Se declara explícitamente que no existe, no se aproxima |
 | El LLM devuelve texto no estructurado (cuando se conecte el LLM real) | Reintento controlado vía `prompt_validar_salida.md`; si persiste, error controlado |

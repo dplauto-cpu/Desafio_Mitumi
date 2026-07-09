@@ -28,6 +28,7 @@ from src.lectura_datos import (
 from src.validaciones import auditar_salida
 from src.prompts import cargar_prompt
 from src.llm import llamar_llm, llm_disponible
+from integrations.api_backend import ApiBackendError
 
 # Defensa en profundidad: si alguna vez esto no fuera False, preferimos que el agente no arranque
 # a que escriba en la BD por error.
@@ -40,7 +41,7 @@ PALABRAS_ESCRITURA = [
     "aprueba", "aprobar", "confirma", "confirmar", "sube el presupuesto", "crea un evento",
     "crear evento", "cambia la fecha", "reserva",
 ]
-PALABRAS_USUARIOS = ["usuarios", "contraseña", "contrasenia", "password", "credencial", "credenciales"]
+PALABRAS_USUARIOS = ["usuarios", "contraseña", "password", "credencial", "credenciales"]
 
 # --- Consultas transversales por estado de evento (sin id_evento) --------------------------
 # Nota: los estados reales de este dataset (data/mock/estados.json) son "solicitado",
@@ -149,16 +150,19 @@ def ejecutar_agente(payload):
         salida["requiere_validacion_humana"] = True
         return auditar_salida(salida)
 
-    if id_evento is None and _parece_consulta_transversal_eventos(pregunta_lower):
-        return _responder_consulta_transversal_eventos(salida, pregunta_lower)
-
     if id_evento is None and ("billete" in pregunta_lower or "ponente" in pregunta_lower):
         salida["resumen"] = "De que evento (id_evento) necesitas consultar esa informacion?"
         salida["bloqueos_detectados"] = ["falta id_evento para resolver la consulta"]
         return auditar_salida(salida)
 
-    # --- 2. Consulta de solo lectura (equivalente a integrations/api_backend.py) -------------
+    # --- 2. Consulta de solo lectura (mock o API real segun USAR_API_TRIPULACIONES) ----------
+    # TablaNoPermitida y ApiBackendError pueden saltar en cualquiera de estas ramas (incluida
+    # la transversal, que tambien puede leer eventos via la API real) - de ahi que las tres
+    # vivan dentro del mismo try.
     try:
+        if id_evento is None and _parece_consulta_transversal_eventos(pregunta_lower):
+            return _responder_consulta_transversal_eventos(salida, pregunta_lower)
+
         if id_evento is not None and "billete" in pregunta_lower and "vuelta" in pregunta_lower:
             return _responder_ponentes_sin_billete(salida, id_evento, "vuelta")
 
@@ -180,6 +184,20 @@ def ejecutar_agente(payload):
         salida["resumen"] = "No puedo acceder a esa informacion: esta fuera de mi alcance de consulta."
         salida["bloqueos_detectados"] = [str(exc)]
         salida["nivel_riesgo"] = "alto"
+        salida["requiere_validacion_humana"] = True
+        return auditar_salida(salida)
+
+    except ApiBackendError as exc:
+        # Fallo de infraestructura (red, autenticacion, formato) al llamar a la API real de
+        # Tripulaciones - distinto de "el dato no existe". Lumen no debe fingir que no hay
+        # datos ni quedarse sin responder: lo declara explicitamente como bloqueo tecnico.
+        salida["ok"] = False
+        salida["resumen"] = (
+            "No he podido consultar la API en tiempo real ahora mismo, asi que no puedo "
+            "confirmar este dato con seguridad."
+        )
+        salida["bloqueos_detectados"] = ["fallo de la API real de Tripulaciones: " + str(exc)]
+        salida["nivel_riesgo"] = "medio"
         salida["requiere_validacion_humana"] = True
         return auditar_salida(salida)
 
@@ -229,7 +247,7 @@ def _responder_ponentes_sin_billete(salida, id_evento, tipo):
 
     salida["datos_detectados"] = {"ponentes_sin_billete_" + tipo: nombres}
     salida["trazas"]["fuentes_consultadas"] = [
-        "evento_ponente.billete_" + tipo + "_link",
+        "ponencias.billete_" + tipo + "_link",
         "ponentes.nombre_ponente",
     ]
     return auditar_salida(salida)
@@ -248,7 +266,7 @@ def _responder_con_llm(salida, pregunta, id_evento, historial=None):
 
     Nota de seguridad: el LLM solo ve el JSON de contexto_completo_evento(), que ya excluye
     `usuarios` a nivel de codigo. Aunque el LLM alucinase o el usuario intentase manipular el
-    prompt, auditar_salida() vuelve a filtrar cualquier mencion a usuarios/contrasenia antes de
+    prompt, auditar_salida() vuelve a filtrar cualquier mencion a usuarios/credenciales antes de
     devolver la respuesta.
     """
     contexto = contexto_completo_evento(id_evento)
@@ -336,7 +354,7 @@ def _responder_consulta_transversal_eventos(salida, pregunta_lower):
         salida["resumen"] = "No hay ningun evento " + etiqueta + " en los datos disponibles."
 
     salida["datos_detectados"] = {
-        "eventos": [{"id_evento": e.get("id_evento"), "nombre_evento": e.get("nombre_evento")} for e in eventos],
+        "eventos": [{"id_evento": e.get("id"), "nombre_evento": e.get("nombre_evento")} for e in eventos],
     }
     salida["trazas"]["fuentes_consultadas"] = fuentes
     return auditar_salida(salida)

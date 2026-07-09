@@ -32,3 +32,13 @@ SETTINGS = cargar_env()
 MODO_DEMO = SETTINGS.get("MODO_DEMO", "True") == "True"
 LLM_PROVIDER = SETTINGS.get("LLM_PROVIDER", "")
 LLM_MODEL = SETTINGS.get("LLM_MODEL", "")
+
+# --- API real "Proyecto Tripulaciones" (ERP de Eventos, ver openapi.yaml) -------------------
+# Cubre hoy solo eventos/clientes/espacios/ponentes (GET). Salas, presupuestos, estados y
+# ponencias no tienen endpoint todavia y siguen leyendose de data/mock/*.json - ver la nota de
+# modo hibrido en src/lectura_datos.py.
+USAR_API_TRIPULACIONES = SETTINGS.get("USAR_API_TRIPULACIONES", "False") == "True"
+API_TRIPULACIONES_BASE_URL = SETTINGS.get("BACKEND_BASE_URL", "http://localhost:3000/api/v1")
+# Token de servicio (JWT) ya emitido por POST /auth/login - Lumen no hace el login el mismo,
+# solo reutiliza un token de una cuenta de servicio configurada aqui.
+API_TRIPULACIONES_TOKEN = SETTINGS.get("API_TRIPULACIONES_TOKEN", "")

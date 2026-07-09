@@ -1,9 +1,10 @@
 [
   {
-    "id_sala": 3,
+    "id": 3,
     "nombre_sala": "Sala Atlas",
-    "tipo": "auditorio",
+    "tipo_sala": "auditorio",
     "capacidad_max_sala": 350,
+    "nota_sala": "",
     "id_espacio": 2
   }
 ]
