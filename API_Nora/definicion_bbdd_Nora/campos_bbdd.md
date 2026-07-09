@@ -97,3 +97,7 @@ ponentes:
 estados:
 - id                    uuid
 - descripcion           text
+
+**Propuestas:**
+
+- incluir campo de ciudad de origen en la tabla del ponente
