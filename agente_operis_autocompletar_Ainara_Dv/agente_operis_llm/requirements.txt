@@ -2,11 +2,15 @@
 # y config/settings.py solo usan la librería estándar de Python (re, os,
 # json, pathlib) — sin dependencias externas, ni siquiera para leer .env.
 #
-# Dependencias OPCIONALES:
+# Esta copia (agente_operis_llm) SÍ necesita las siguientes, activas (no
+# comentadas): usa el motor llm por defecto y trae streamlit_app.py, que
+# permite subir .pdf/.docx además de .txt.
 
-# groq            # motor LLM (OPERIS_MOTOR=llm / --motor llm). Requiere
-#                 # además GROQ_API_KEY (.env).
+groq              # motor LLM (OPERIS_MOTOR=llm / --motor llm). Requiere
+                  # además GROQ_API_KEY (.env).
+streamlit         # interfaz de prueba (streamlit_app.py)
+pypdf>=4.0        # lectura de .pdf (streamlit_app.py y --motor con archivo .pdf)
+python-docx>=1.1  # lectura de .docx (streamlit_app.py y --motor con archivo .docx)
 
-# pypdf>=4.0          # lectura de .pdf
-# python-docx>=1.1    # lectura de .docx
-# tiktoken            # solo para regenerar docs/estimacion_tokens.py
+# Opcional:
+# tiktoken        # solo para regenerar docs/estimacion_tokens.py

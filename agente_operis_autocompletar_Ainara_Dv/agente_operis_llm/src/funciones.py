@@ -506,18 +506,102 @@ def _extraer_ponente_de_bloque(bloque_texto):
     return ponente
 
 
+def _extraer_ponente_de_parrafo(parrafo_texto):
+    """
+    Extrae los campos de UN ponente a partir de su propio párrafo de
+    prosa libre, del formato "Ponente N: Nombre, cargo de la Empresa.
+    Especialista en X. Correo: ..., teléfono .... Su ponencia será...
+    Título: "...". Se alojará en el Hotel...". Es el formato real más
+    habitual en los briefings de prueba (ver doc_prueba/) -- a
+    diferencia de _extraer_ponente_de_bloque, aquí NO hay una línea
+    propia por campo: todo está incrustado en un mismo párrafo, así
+    que cada campo se busca con su propio patrón dentro del párrafo
+    completo en vez de separar por líneas.
+
+    Solo se extraen los campos con un patrón razonablemente fiable en
+    prosa libre (nombre, email, teléfono, cargo+empresa, sector,
+    título de la ponencia, hotel). El resto (horario de la ponencia,
+    transporte, checkin, links...) se deja vacío: exigiría cruzar
+    referencias relativas ("el día 5", "por la mañana") con las fechas
+    del evento, con demasiado riesgo de construir un dato incorrecto
+    -- mismo principio de "no inventar" que en el resto del motor.
+
+    Args:
+        parrafo_texto (str): Texto desde "Ponente N:" hasta el
+            siguiente "Ponente N+1:" (o el final del documento).
+
+    Returns:
+        dict: Un ponente (ver _ponente_vacio para el esquema completo).
+    """
+    ponente = _ponente_vacio()
+
+    resultado_nombre = re.match(r"(?im)^-?\s*ponente\s*\d+\s*:\s*([^,\n]+)", parrafo_texto)
+    if resultado_nombre:
+        ponente["nombre_ponente"] = resultado_nombre.group(1).strip()
+
+    resultado_email = re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', parrafo_texto)
+    if resultado_email:
+        ponente["email"] = resultado_email.group(0)
+
+    # Tolera prefijos internacionales ("+49 30 9876543") además del
+    # formato español -- a diferencia de detectar_telefono(), aquí el
+    # teléfono va siempre anclado a la palabra "teléfono", así que se
+    # puede ser más permisivo con el formato del número en sí.
+    resultado_telefono = re.search(r"(?i)tel[ée]fono\s*:?\s*(\+?[\d][\d\s\-]{6,18}\d)", parrafo_texto)
+    if resultado_telefono:
+        ponente["telefono"] = resultado_telefono.group(1).strip()
+
+    # "..., catedrático de la Universidad de Berlín." / "..., CEO de
+    # GreenTech Ventures." -- cargo y empresa separados por el conector
+    # "de"/"del"/"de la". LIMITACIÓN CONOCIDA: si el cargo mismo incluye
+    # "de" (p. ej. "directora de Innovación en Tecnalia"), el reparto
+    # entre cargo y empresa puede no ser exacto -- se prefiere un
+    # reparto aproximado a dejarlo vacío, porque el texto igual queda
+    # visible para que la persona lo corrija en la revisión.
+    resultado_cargo_empresa = re.search(
+        r",\s*([^,.]+?)\s+(?:de la|del|de)\s+([A-ZÁÉÍÓÚÑ][^.]+?)\.",
+        parrafo_texto
+    )
+    if resultado_cargo_empresa:
+        ponente["cargo"] = resultado_cargo_empresa.group(1).strip()
+        ponente["empresa"] = resultado_cargo_empresa.group(2).strip()
+
+    resultado_sector = re.search(
+        r"(?i)(?:especialista|experto|experta)\s+en\s+([^.]+?)\.",
+        parrafo_texto
+    )
+    if resultado_sector:
+        ponente["sector"] = resultado_sector.group(1).strip()
+
+    resultado_titulo = re.search(r'(?i)t[íi]tulo\s*:?\s*"([^"]+)"', parrafo_texto)
+    if resultado_titulo:
+        ponente["tipo_ponencias"] = resultado_titulo.group(1).strip()
+
+    resultado_hotel = re.search(r"(?i)se alojará?\s+en\s+el\s+([^.\n]+?)\.", parrafo_texto)
+    if resultado_hotel:
+        ponente["nombre_hotel"] = resultado_hotel.group(1).strip()
+
+    return ponente
+
+
 def detectar_ponentes(texto):
     """
-    Detecta múltiples ponentes en el texto. Soporta dos formatos:
+    Detecta múltiples ponentes en el texto. Soporta tres formatos, en
+    este orden de prioridad:
 
-    1. Bloques numerados por ponente ("Ponente 1" / "Ponente 2"...,
-       cada uno con sus propias líneas "Nombre:", "DNI:", "Email:"...)
-       -- se prueba primero porque permite repartir cada etiqueta al
-       ponente correcto (ver _extraer_ponente_de_bloque).
-    2. Lista en una sola línea ("Los ponentes serán Ane Etxeberria y
+    1. Párrafo de prosa libre por ponente ("Ponente 1: Nombre, cargo
+       de la Empresa. Correo: ..., teléfono ...") -- el formato real
+       más habitual (ver doc_prueba/ y _extraer_ponente_de_parrafo).
+       "Ponente N:" es el inicio del párrafo, no una línea propia.
+    2. Bloques numerados por ponente ("Ponente 1" sola en su línea,
+       seguida de líneas propias "Nombre:", "DNI:", "Email:"...) --
+       ver _extraer_ponente_de_bloque. Se prueba si no hay párrafos
+       del formato 1 (el "Ponente N:" de ese formato lleva dos puntos
+       en la misma línea; este no).
+    3. Lista en una sola línea ("Los ponentes serán Ane Etxeberria y
        Jon Aguirre", "Ponentes: Ane Etxeberria, Jon Aguirre") -- solo
-       se detecta el nombre; el resto de campos del ponente quedan
-       vacíos. Solo se usa si no se encontró ningún bloque numerado.
+       se detecta el nombre; el resto de campos quedan vacíos. Se usa
+       solo si no se encontró ninguno de los dos formatos anteriores.
 
     LIMITACIÓN CONOCIDA (formato de lista): si el documento etiqueta
     datos individuales de ponente (Email ponente:, Teléfono ponente:)
@@ -529,6 +613,11 @@ def detectar_ponentes(texto):
     Returns:
         list: Lista de diccionarios con la información de cada ponente.
     """
+    partes = re.split(r"(?im)(?=^-?\s*ponente\s*\d+\s*:)", texto)
+    parrafos_ponente = [p for p in partes if re.match(r"(?im)^-?\s*ponente\s*\d+\s*:", p)]
+    if parrafos_ponente:
+        return [_extraer_ponente_de_parrafo(p) for p in parrafos_ponente]
+
     bloques = re.split(r"(?im)^\s*ponente\s*\d+\s*$", texto)
     if len(bloques) > 1:
         return [_extraer_ponente_de_bloque(bloque) for bloque in bloques[1:]]
@@ -561,11 +650,14 @@ def detectar_nombre_evento(texto):
     "cualquier línea capitalizada" de reserva: es preferible dejar el
     campo vacío a rellenarlo con una suposición.
 
-    "organización(?:\\s+\\w+)?\\s+(?:de un|del)" permite como mucho UNA
-    palabra entre "organización" y "de un"/"del" (p. ej. "organización
-    integral del Congreso...", ver data/ejemplos/briefing_complejo.txt)
-    -- no un comodín sin límite, para no capturar frases que no tienen
-    relación real con el nombre del evento.
+    "organización(?:\\s+\\w+)?\\s+(?:de un|del|de nuestro|de nuestra)" permite
+    como mucho UNA palabra entre "organización" y el conector (p. ej.
+    "organización integral del Congreso...", ver
+    data/ejemplos/briefing_complejo.txt) -- no un comodín sin límite,
+    para no capturar frases que no tienen relación real con el nombre
+    del evento. "de nuestro"/"de nuestra" cubre el fraseo real, muy
+    habitual, de "para la organización de nuestro Congreso..." (ver
+    doc_prueba/Sostenibilidad_complejo.docx y Global_elhorror.docx).
 
     El límite de la captura usa "\\n\\s*\\n" (línea en blanco, cambio
     de párrafo) y no un simple "\\n": un nombre de evento largo puede
@@ -573,9 +665,18 @@ def detectar_nombre_evento(texto):
     original (ver "III Congreso Internacional\\nde Movilidad
     Sostenible." en briefing_complejo.txt) -- un salto de línea suelto
     no es un límite real del nombre, solo el formato del documento.
+
+    La coma como límite lleva un "(?!\\s*[A-ZÁÉÍÓÚÑ])": muchos nombres
+    de evento reales enumeran varios temas dentro del propio nombre
+    ("Congreso Mundial de Innovación, Tecnología y Sostenibilidad", ver
+    doc_prueba/Global_elhorror.docx) -- si la coma cortase siempre, se
+    perdería lo que viene después. Solo se trata como límite real si NO
+    va seguida de una palabra en mayúscula (que indicaría que la
+    enumeración del nombre continúa); si va seguida de minúscula
+    ("Digital, que queremos celebrar...") sí es el final del nombre.
     """
     patrones = [
-        r"(?i:se trata del|se trata de un|se celebra el|organización(?:\s+\w+)?\s+(?:de un|del))\s+([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ\s]+?)(?=\s*(?:,|;|\.|\n\s*\n|con\s|para\s|en\s|del\s+\d|$))",
+        r"(?i:se trata del|se trata de un|se celebra el|organización(?:\s+\w+)?\s+(?:de un|del|de nuestro|de nuestra))\s+([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ\s,]+?)(?=\s*(?:,(?!\s*[A-ZÁÉÍÓÚÑ])|;|\.|\n\s*\n|con\s|para\s|en\s|del\s+\d|$))",
         r"(?i:evento|nombre del evento|título)\s*[:;]\s*([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ\s]+)"
     ]
     for patron in patrones:

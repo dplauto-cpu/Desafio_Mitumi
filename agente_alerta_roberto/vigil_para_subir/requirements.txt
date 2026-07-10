@@ -1,5 +1,0 @@
-playwright>=1.61,<2
-beautifulsoup4>=4.15,<5
-pydantic>=2.13,<3
-groq>=1.5,<2
-pytest>=9.1,<10
