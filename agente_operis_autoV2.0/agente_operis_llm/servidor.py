@@ -16,18 +16,28 @@ Por defecto escucha en http://localhost:5002 (el mock de API_Nora usa el 5000 y 
 
 Endpoints:
     GET  /               -> estado del servidor (health check)
-    POST /autocompletar  -> body: {"texto_briefing": "...", "motor": "reglas"|"llm" (opcional)}
+    POST /autocompletar  -> body: {
+                                "id_evento": "...",              (obligatorio)
+                                "texto_briefing": "...",         (obligatorio)
+                                "bloques_a_actualizar": [...],   (opcional, ej. ["nota_bene"])
+                                "historial_anterior": {...}      (opcional; si no se manda y
+                                                                   el evento ya existe en BD,
+                                                                   se autocarga desde ahi)
+                            }
                             Devuelve el contrato de salida comun del agente: datos_detectados
-                            con los 6 bloques (evento, cliente, espacio, sala, presupuesto,
-                            ponentes), bloqueos_detectados con los campos que faltan, y
+                            con los 4 bloques (evento, cliente, ponentes, nota_bene),
+                            bloqueos_detectados con los campos que faltan, y
                             requiere_validacion_humana=True SIEMPRE — el front debe mostrar
                             los campos como PROPUESTA editable, nunca guardarlos solos.
 
 Notas:
-    - Sin GROQ_API_KEY en .env, usar "motor": "reglas" (gratis y determinista). El motor
-      "llm" fallara de forma controlada si no hay clave (ver src/llm.py).
-    - Este servidor no guarda estado: cada peticion es independiente (a diferencia del chat
-      de Lumen, aqui no hay memoria de conversacion que mantener).
+    - El unico motor disponible es "llm" (Groq); el motor de reglas se elimino. Requiere
+      GROQ_API_KEY en .env — sin ella, el agente devuelve un error controlado (ver src/llm.py).
+    - "id_evento" es obligatorio: el agente solo funciona sobre eventos existentes, porque
+      lo usa para localizar el historico (ver src/lectura_bd.py / src/nucleo.py).
+    - Este servidor no guarda estado propio: cada peticion es independiente (a diferencia
+      del chat de Lumen, aqui no hay memoria de conversacion que mantener); el historico de
+      actualizaciones vive en la BD del proyecto, no en este proceso.
 """
 
 import sys
@@ -70,20 +80,35 @@ def inicio():
 def autocompletar():
     cuerpo = request.get_json(silent=True)
     if not cuerpo or not isinstance(cuerpo, dict):
-        return _error("CUERPO_INVALIDO", "Manda un JSON con al menos 'texto_briefing'.")
+        return _error("CUERPO_INVALIDO", "Manda un JSON con al menos 'id_evento' y 'texto_briefing'.")
+
+    id_evento = cuerpo.get("id_evento")
+    if not id_evento:
+        return _error("CAMPO_OBLIGATORIO", "El campo 'id_evento' es obligatorio: el agente solo funciona sobre eventos existentes.")
 
     texto_briefing = (cuerpo.get("texto_briefing") or "").strip()
     if not texto_briefing:
         return _error("CAMPO_OBLIGATORIO", "El campo 'texto_briefing' es obligatorio.")
 
+    # El unico motor disponible es "llm" (el motor de reglas se elimino).
     motor = cuerpo.get("motor") or settings.MOTOR_POR_DEFECTO
-    if motor not in ("reglas", "llm"):
-        return _error("MOTOR_INVALIDO", "El campo 'motor' debe ser 'reglas' o 'llm'.")
+    if motor != "llm":
+        return _error("MOTOR_INVALIDO", "El unico motor disponible es 'llm'.")
+
+    bloques_a_actualizar = cuerpo.get("bloques_a_actualizar")
+    if bloques_a_actualizar is not None and not isinstance(bloques_a_actualizar, list):
+        return _error("CAMPO_INVALIDO", "'bloques_a_actualizar' debe ser una lista, ej. [\"nota_bene\"].")
+
+    historial_anterior = cuerpo.get("historial_anterior")
+    if historial_anterior is not None and not isinstance(historial_anterior, dict):
+        return _error("CAMPO_INVALIDO", "'historial_anterior' debe ser un objeto JSON.")
 
     # Se construye el contrato de entrada comun del agente (README.md, seccion 9.2):
-    # el front solo manda el texto, el resto lo fija esta capa.
+    # el front manda id_evento + texto (+ opcionalmente bloques_a_actualizar/historial_anterior),
+    # el resto lo fija esta capa. Si no se manda historial_anterior, src/nucleo.py intenta
+    # autocargarlo desde la BD real a partir de id_evento (ver src/lectura_bd.py).
     payload = {
-        "id_evento": None,
+        "id_evento": id_evento,
         "id_registro": None,
         "tipo_peticion": "extraer_briefing",
         "origen": "frontend",
@@ -92,8 +117,11 @@ def autocompletar():
         "datos": {
             "texto_briefing": texto_briefing,
             "motor": motor,
+            "bloques_a_actualizar": bloques_a_actualizar,
         },
-        "contexto": {},
+        "contexto": {
+            "historial_anterior": historial_anterior,
+        },
         "modo": "propuesta",
     }
 
