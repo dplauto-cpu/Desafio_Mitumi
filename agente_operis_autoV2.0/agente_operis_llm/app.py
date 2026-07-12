@@ -352,12 +352,13 @@ def mostrar_cliente(cliente):
 
 def mostrar_nota_bene(nota_bene):
     if not nota_bene:
-        st.markdown("""
-        <div class="nota-bene-panel">
-            <div class="nb-header">📌 Nota Bene</div>
-            <p style="font-size:16px; color:#6a8aaa;">No hay Nota Bene generada para este evento.</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            '<div class="nota-bene-panel">'
+            '<div class="nb-header">📌 Nota Bene</div>'
+            '<p style="font-size:16px; color:#6a8aaa;">No hay Nota Bene generada para este evento.</p>'
+            '</div>',
+            unsafe_allow_html=True
+        )
         return
 
     html = f"""
@@ -492,6 +493,13 @@ def mostrar_nota_bene(nota_bene):
             html += '</div>'
 
     html += "</div>"
+
+    # Streamlit/CommonMark trata cualquier linea que empiece con 4+ espacios
+    # como un bloque de codigo indentado (no como HTML), y el f-string de
+    # arriba conserva la indentacion del propio codigo Python. Sin este
+    # "lstrip" por linea, el panel entero se muestra como texto literal en
+    # lugar de renderizarse.
+    html = "\n".join(linea.lstrip() for linea in html.split("\n"))
     st.markdown(html, unsafe_allow_html=True)
 
 

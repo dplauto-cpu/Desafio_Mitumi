@@ -23,7 +23,8 @@ from datetime import datetime
 from config import settings
 from src.schemas import (
     crear_estructura_vacia_completa,
-    generar_aviso_y_validacion
+    generar_aviso_y_validacion,
+    extraer_ultimo_estado
 )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -72,51 +73,123 @@ ESQUEMA_SALIDA = {
 }
 
 
+def _esquema_para_prompt():
+    """
+    Versión de ESQUEMA_SALIDA que se le enseña al LLM en el prompt: los
+    mismos campos, pero con la FORMA real esperada (objetos con sus
+    claves, listas de objetos donde corresponda) en vez de listas planas
+    de nombres de campo.
+
+    ESQUEMA_SALIDA guarda listas de nombres ("evento": ["nombre_evento",
+    "ciudad", ...]) porque _fusionar_sobre_plantilla las usa para saber
+    qué claves son válidas en cada bloque. Pero mandarle esa MISMA forma
+    al LLM como "así debe verse tu respuesta" es ambiguo: en una prueba
+    real, el modelo interpretó que el valor de "evento" debía ser ese
+    array, y devolvió evento/cliente como listas de valores posicionales
+    en vez de objetos -- lo que invalidó el JSON completo (error 400
+    json_validate_failed). Aquí se construye la forma real (dict/list
+    anidados) que sí se espera en la respuesta, reutilizando los mismos
+    nombres de campo de ESQUEMA_SALIDA para no duplicarlos.
+    """
+    ps = ESQUEMA_SALIDA["nota_bene"]["presupuesto_servicios"]
+    return {
+        "evento": {campo: "" for campo in ESQUEMA_SALIDA["evento"]},
+        "cliente": {
+            "cliente": "", "empresa": "", "email": "", "telefono": "",
+            "sector": "", "ciudad": "",
+            "personas_contacto": [
+                {"nombre": "", "cargo": "", "email": "", "telefono": "", "nota": ""}
+            ],
+            "cliente_existente": False,
+            "nota_cliente": ""
+        },
+        "ponentes": [
+            {campo: "" for campo in ESQUEMA_SALIDA["ponentes"]}
+        ],
+        "nota_bene": {
+            "cabecera": {campo: "" for campo in ESQUEMA_SALIDA["nota_bene"]["cabecera"]},
+            "presupuesto_servicios": {
+                sub: {campo: "" for campo in campos} for sub, campos in ps.items()
+            },
+            "informacion_adicional": {
+                "notas_generales": "",
+                "requerimientos_especiales": "",
+                "riesgos_detectados": "",
+                "acciones_pendientes": [],
+                "dependencias": [],
+                "historico_actualizaciones": []
+            }
+        }
+    }
+
+
 # =====================================================================
 # 2. CONSTRUCCIÓN DEL PROMPT DE SISTEMA
 # =====================================================================
 def construir_prompt_sistema(historial_anterior=None, bloques_a_actualizar=None):
     """
     Carga prompts/prompt_sistema.md y le inserta el esquema de salida.
-    
+
     Args:
-        historial_anterior (dict, optional): Estado anterior del briefing
-            para fusionar. Si se proporciona, se añade una sección adicional
-            al prompt con instrucciones de actualización.
-        bloques_a_actualizar (list, optional): Lista de bloques a actualizar.
-            Si se proporciona, solo esos bloques se modifican.
-            Ej: ["nota_bene"]
-    
+        historial_anterior (dict, optional): histórico completo (ver
+            src/schemas.py::crear_estructura_vacia_historico). Solo se usa
+            la ÚLTIMA versión guardada (extraer_ultimo_estado): nunca se
+            manda la lista completa de "versiones" al LLM, porque crece
+            con cada ronda de actualización y era lo que hacía saltar el
+            límite de tokens por minuto del free tier de Groq.
+        bloques_a_actualizar (list, optional): Lista de bloques a
+            actualizar. Ej: ["nota_bene"]. Los bloques que NO estén en
+            esta lista no hace falta que el LLM los reproduzca con
+            exactitud: src/nucleo.py los protege directamente a partir del
+            último estado conocido, sin depender de que el modelo los
+            copie bien (ver _proteger_bloques_no_actualizados).
+
     Returns:
         str: Prompt de sistema completo
     """
     plantilla = RUTA_PROMPT_SISTEMA.read_text(encoding="utf-8")
-    
+
+    # El "EJEMPLO COMPLETO" al final de prompt_sistema.md (marcado con
+    # <!-- EJEMPLO_SOLO_SIN_HISTORIAL -->) solo aporta en extracciones en
+    # frío: cuando hay histórico, el "ESTADO ACTUAL DEL EVENTO" de más
+    # abajo ya es un ejemplo real y mejor del mismo esquema, así que el
+    # ejemplo estático se recorta -- es la parte más pesada del prompt y
+    # era lo que hacía saltar el límite de tokens por minuto del free
+    # tier de Groq en actualizaciones con histórico.
+    estado_actual = extraer_ultimo_estado(historial_anterior)
+    cuerpo, _, ejemplo = plantilla.partition("<!-- EJEMPLO_SOLO_SIN_HISTORIAL -->")
+    plantilla = cuerpo if estado_actual else (cuerpo + ejemplo)
+
     prompt = plantilla.replace(
         "{esquema}",
-        json.dumps(ESQUEMA_SALIDA, ensure_ascii=False, indent=2)
+        json.dumps(_esquema_para_prompt(), ensure_ascii=False, indent=2)
     )
-    
-    # Si hay histórico anterior, añadir instrucciones de actualización
-    if historial_anterior:
+
+    # Si hay histórico, añadir solo la ÚLTIMA versión conocida como
+    # contexto de fusión (nunca la lista completa de versiones).
+    if estado_actual:
         prompt += f"""
-        
+
 # =====================================================================
-# HISTÓRICO ANTERIOR (MODO ACTUALIZACIÓN)
+# ESTADO ACTUAL DEL EVENTO (ÚLTIMA VERSIÓN CONOCIDA)
 # =====================================================================
 
-Este es el estado anterior del briefing. Debes usarlo como referencia
-para ACTUALIZAR en lugar de crear desde cero.
+Este es el estado más reciente del briefing, antes de procesar el nuevo
+texto. Úsalo como referencia para FUSIONAR, no para empezar de cero.
 
-## Estado anterior:
-{json.dumps(historial_anterior, ensure_ascii=False, indent=2)}
+## Estado actual:
+{json.dumps(estado_actual, ensure_ascii=False, indent=2)}
 
-## INSTRUCCIONES DE ACTUALIZACIÓN:
+## INSTRUCCIONES DE FUSIÓN:
 
-1. **Mantén** toda la información que ya existía en el histórico
-2. **Actualiza** solo los campos que el NUEVO documento modifica
-3. **Nunca borres** información anterior a menos que el nuevo documento
-   la contradiga explícitamente
+1. **Mantén** la información que ya existía y que el nuevo texto no contradice.
+2. **Actualiza** solo lo que el nuevo texto modifique o añada.
+3. **Nunca borres** información anterior a menos que el nuevo texto la
+   contradiga explícitamente.
+4. No hace falta que reproduzcas con precisión los bloques que no te pidan
+   actualizar (ver más abajo): el sistema los mantiene intactos a partir
+   del estado actual, independientemente de lo que devuelvas para ellos.
+   Concentra el esfuerzo en los bloques que sí debes actualizar.
 
 ### Para el presupuesto total estimado:
 Si hay cambio en el presupuesto, indícalo así:
@@ -124,58 +197,41 @@ Si hay cambio en el presupuesto, indícalo así:
 o
 "3200€ (+700€ respecto a versión anterior)"
 
-### Para el histórico de actualizaciones:
-Añade una nueva entrada en nota_bene.informacion_adicional.historico_actualizaciones
-con la fecha actual (YYYY-MM-DDThh:mm:ss) y un resumen de los cambios detectados.
-
 ### Fechas de celebración:
-Si el nuevo documento modifica las fechas, actualiza fecha_celebracion
-y refleja el cambio en el histórico.
+Si el nuevo documento modifica las fechas, actualiza fecha_celebracion.
 
 """
-    
-    # NUEVO: Si hay bloques_a_actualizar, añadir instrucciones de protección
+
+    # Si hay bloques_a_actualizar, indicar cuáles son prioritarios.
     if bloques_a_actualizar:
         bloques_texto = ", ".join(bloques_a_actualizar)
         prompt += f"""
-        
+
 # =====================================================================
-# MODO ACTUALIZACIÓN PARCIAL POR BLOQUES
+# BLOQUES A ACTUALIZAR
 # =====================================================================
 
-El usuario ha especificado que SOLO debe actualizar los siguientes bloques:
+Presta atención especial y actualiza con el nuevo texto estos bloques:
 **{bloques_texto}**
 
-## INSTRUCCIONES OBLIGATORIAS:
-
-1. **ACTUALIZA** únicamente los bloques listados: {bloques_texto}
-2. **PROTEGE** todos los demás bloques. Deben ser COPIA EXACTA del histórico anterior.
-3. **NUNCA MODIFIQUES** un bloque protegido, aunque el nuevo texto lo mencione.
-
-### Ejemplo:
-Si `bloques_a_actualizar = ["nota_bene"]`:
-- Evento → COPIA EXACTA del histórico
-- Cliente → COPIA EXACTA del histórico
-- Ponentes → COPIA EXACTA del histórico
-- Nota Bene → ACTUALIZADO con el nuevo texto
-
-### Cómo manejar la protección:
-Para cada bloque protegido, debes copiar literalmente su contenido del histórico anterior.
-No añadas, no quites, no modifiques nada.
+Para el resto de bloques no es necesario que los reproduzcas con
+exactitud en tu respuesta: el sistema los protege directamente a partir
+del estado actual mostrado arriba, tanto si los incluyes como si no.
 
 """
-    else:
+    elif estado_actual:
         prompt += """
-        
+
 # =====================================================================
 # MODO ACTUALIZACIÓN COMPLETA
 # =====================================================================
 
-El usuario NO ha especificado bloques a actualizar. Por lo tanto,
-actualiza TODOS los bloques que el nuevo documento modifique.
+No se han especificado bloques concretos a actualizar. Actualiza todos
+los bloques que el nuevo documento modifique, fusionando con el estado
+actual mostrado arriba.
 
 """
-    
+
     return prompt
 
 
