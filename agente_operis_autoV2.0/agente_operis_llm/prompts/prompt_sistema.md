@@ -200,6 +200,7 @@ campos.
   (en `nota_bene.informacion_adicional`) van siempre vacíos — los rellena el
   código después, no el LLM.
 
+<!-- EJEMPLO_SOLO_SIN_HISTORIAL -->
 # =====================================================================
 # EJEMPLO COMPLETO
 # =====================================================================

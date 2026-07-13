@@ -74,7 +74,90 @@ Se documentó una limitación real de la BD, no del agente: el esquema real solo
 
 ---
 
-## 7. Sugerencias técnicas descartadas
+## 7. Quinta fase: pruebas end-to-end con `app.py`, límite de tokens por minuto y esquema ambiguo
+
+El 12/07/2026 empezaron las pruebas de extremo a extremo con la interfaz de Streamlit,
+ahora reescrita como `app.py` (sustituye a `streamlit_app.py`). La primera prueba
+identificó correctamente Evento, Cliente y Ponentes al 83%, pero Nota Bene aparecía en
+blanco. Un primer intento de arreglarlo a mano (ampliar mucho el prompt de sistema con un
+ejemplo más elaborado, sin tocar la causa real) empeoró el resultado hasta el 63% y luego
+un 0% que resultó ser un error silencioso, no una extracción vacía real. Se investigó y se
+optó por revertir ambos archivos modificados (`prompts/prompt_sistema.md`, `src/llm.py`) a
+la última versión probada y funcional, en vez de intentar arreglar un problema que no se
+podía identificar con certeza sin gastar más cuota de la API.
+
+Una vez restaurado, un segundo bug de Nota Bene resultó ser puramente de renderizado, no de
+datos: `mostrar_nota_bene()` en `app.py` construye el HTML con f-strings multilínea que
+conservan la indentación del propio código Python (4-16 espacios). Streamlit renderiza ese
+HTML pasándolo primero por un parser Markdown (CommonMark), que trata cualquier línea con
+4+ espacios de indentación al inicio como un bloque de código, no como HTML -- el panel se
+mostraba como texto plano en vez de con estilo. Arreglado quitando la indentación línea a
+línea justo antes de pasarlo a `st.markdown()`. Se confirmó explícitamente que este bug era
+exclusivo de la capa de presentación de Streamlit: la salida real del agente
+(`ejecutar_agente`) es JSON puro sin HTML, así que un futuro frontend en React (que no pasa
+por un parser Markdown) no puede heredar este problema.
+
+Superado esto, activar el histórico para probar el flujo completo de actualización hizo
+saltar un `error 413 rate_limit_exceeded` de Groq: "Request too large ... tokens per minute
+(TPM): Limit 8000, Requested 11211". A diferencia del límite de 200.000 tokens/día (que se
+agota por acumulación de uso a lo largo del día), el límite TPM puede saltar con una sola
+llamada si el prompt de esa llamada concreta es demasiado grande. Se investigaron tres
+causas, todas corregidas el mismo día:
+
+1. **El histórico local de sesión de `app.py` mandaba la lista completa de versiones
+   acumuladas al LLM**, no solo la actual. Cada ronda de prueba sobre el mismo `id_evento`
+   añadía una versión más a `historicos_por_evento[id_evento]["versiones"]`, y
+   `construir_prompt_sistema()` volcaba ese diccionario entero (con `json.dumps`) en el
+   prompt -- el tamaño crecía con cada ronda de prueba. Arreglado con una función nueva,
+   `src/schemas.py::extraer_ultimo_estado`, que se queda solo con la última versión antes
+   de construir el prompt. Con el histórico autocargado desde la BD real
+   (`construir_historial_desde_bd`) esto no pasaba, porque esa función ya síntetiza una
+   única "versión: el presente" cada vez -- pero limitar también el camino local a una
+   versión evita el problema por completo y hace que ambos caminos se comporten igual.
+2. **La protección de bloques no actualizados se le pedía al LLM en el prompt** ("copia
+   este bloque tal cual del histórico"), lo que exigía mandarle el bloque completo de todas
+   formas y no garantizaba que lo reprodujera bien. Se movió a Python:
+   `src/nucleo.py::_proteger_bloques_no_actualizados` sobrescribe directamente los bloques
+   protegidos con el último estado conocido, sin pedirle nada al LLM sobre ellos.
+3. **El ejemplo JSON completo del prompt de sistema se enviaba en todas las llamadas**,
+   incluidas las de actualización -- donde ya hay un ejemplo mejor disponible (la última
+   versión real del propio evento). Se marcó la sección en `prompts/prompt_sistema.md` con
+   `<!-- EJEMPLO_SOLO_SIN_HISTORIAL -->` y `construir_prompt_sistema()` la omite
+   automáticamente cuando hay histórico.
+
+Tras estos tres arreglos, dos briefings de prueba (`briefing_prueba.txt`,
+`briefing_prueba_2.txt`) funcionaron de extremo a extremo con histórico activado. Un
+tercero (`briefing_prueba_3.txt`) siguió fallando, primero por el mismo 413 (por muy poco
+margen), y tras un intento adicional de recortar tokens (omitir el ejemplo JSON también en
+frío cuando no hace falta), apareció un error distinto: `400 json_validate_failed`, con el
+LLM devolviendo `evento` y `cliente` como arrays de valores posicionales en vez de objetos.
+La causa: `src/llm.py::ESQUEMA_SALIDA` guarda listas planas de nombres de campo (uso
+interno de `_fusionar_sobre_plantilla`), y esa misma estructura se le enviaba al LLM tal
+cual como "la forma de tu respuesta" -- ambigua, y el modelo la interpretó como si el valor
+de `"evento"` debiera ser ese array. Se separaron las dos responsabilidades: `ESQUEMA_SALIDA`
+se mantuvo intacto para la fusión interna, y una función nueva,
+`src/llm.py::_esquema_para_prompt`, construye la forma real (objetos anidados, listas con
+un elemento de ejemplo) que es lo único que ahora ve el LLM. Con este arreglo,
+`briefing_prueba_3.txt` se procesó correctamente.
+
+De paso, al depurar la continuidad del histórico de cambios, se encontró y corrigió un
+cuarto bug menor: el número de `version` de cada entrada de
+`nota_bene.informacion_adicional.historico_actualizaciones` se calculaba como
+`len(historial_anterior["versiones"])`, que con el histórico autocargado de la BD real
+siempre vale 1 (una única "versión: el presente") -- en producción se habría quedado
+clavado en `version: 2` para siempre. Se cambió a contar las entradas del propio histórico
+de cambios (`len(historico_actualizaciones)`).
+
+Sobre `servidor.py` (la capa HTTP Flask para el futuro frontend React, añadida por un
+compañero de equipo vía un merge de git, no por este trabajo): llegó desalineada del
+contrato de 4 bloques -- mandaba `id_evento: None` siempre (habría fallado toda petición,
+porque `id_evento` es obligatorio) y validaba un motor `"reglas"` que ya no existe. Se
+actualizó para exigir `id_evento` en el body, aceptar solo el motor `"llm"`, y pasar
+`bloques_a_actualizar`/`historial_anterior` opcionales al payload.
+
+---
+
+## 8. Sugerencias técnicas descartadas
 
 Durante el desarrollo se consideraron varias alternativas que finalmente no se implementaron por excesiva complejidad, por ser inoperantes en el contexto actual, o por quedar fuera del alcance de la fase actual.
 
@@ -89,16 +172,17 @@ Durante el desarrollo se consideraron varias alternativas que finalmente no se i
 
 ---
 
-## 8. Resumen de versiones y estado actual
+## 9. Resumen de versiones y estado actual
 
-La evolución del agente ha pasado por cuatro fases principales:
+La evolución del agente ha pasado por cinco fases principales:
 
 | Versión | Fecha | Cambios principales |
 |---|---|---|
 | 1.0.0 – 1.2.0 | 09/07/2026 | Esquema de 6 bloques, dos motores (reglas + llm), corrección de bugs de contaminación cruzada y detección de ponentes. |
 | 2.0.0 | 10/07/2026 | Reestructuración a 4 bloques, eliminación del motor de reglas, creación de Nota Bene, `id_evento` obligatorio, modo actualización por bloques e histórico (vía payload). |
 | 2.1.0 | 10/07/2026 | Conexión a la BD real (Neon) en modo solo lectura, autocarga del histórico desde BD. |
+| 2.2.0 | 12/07/2026 | Interfaz reescrita (`app.py`), corregido el bug de renderizado de Nota Bene en Streamlit, `servidor.py` alineado al contrato de 4 bloques, y resuelto el límite de tokens por minuto (TPM) del free tier de Groq: histórico reducido a la última versión, protección de bloques movida a Python, ejemplo del prompt condicionado al modo, y esquema mostrado al LLM separado del esquema interno (corrige un JSON inválido). |
 
-El estado actual del agente es funcional. Está probado de extremo a extremo con Groq real en tres modos: extracción simple, actualización parcial por bloques y fusión con histórico. La conexión a la BD real está construida y funciona en el camino "sin BD disponible" (import perezoso); está pendiente de probar con la cadena de conexión real `agente_readonly` que debe proporcionar Nora.
+El estado actual del agente es funcional y probado de extremo a extremo con Groq real en varios modos: extracción simple, actualización parcial por bloques, fusión con histórico en varias rondas seguidas sobre el mismo evento, y los tres briefings de prueba disponibles (`briefing_prueba.txt`, `briefing_prueba_2.txt`, `briefing_prueba_3.txt`). La conexión a la BD real está construida y funciona en el camino "sin BD disponible" (import perezoso); está pendiente de probar con la cadena de conexión real `agente_readonly` que debe proporcionar Nora.
 
-Los pendientes críticos son dos. Primero, la definición de cómo invoca el backend a `ejecutar_agente(payload)` (API REST, librería Python importada directamente, u otro mecanismo) sigue sin decidirse, como se documenta en la sección 8.2 de `Agente_OPERIS_implementacion.md`. Segundo, `data/conocimiento/` (ciudades, tipos de evento, estados que usaba el motor de reglas) está huérfano desde la eliminación del motor de reglas; podría reutilizarse para validar la salida del LLM o eliminarse definitivamente.
+Los pendientes críticos siguen siendo dos. Primero, la definición de cómo invoca el backend a `ejecutar_agente(payload)` (API REST -- hay una propuesta en `servidor.py` --, librería Python importada directamente, u otro mecanismo) sigue sin decidirse, como se documenta en la sección 8.2 de `Agente_OPERIS_implementacion.md` y en `agente_operis_llm/README.md`. Segundo, `data/conocimiento/` (ciudades, tipos de evento, estados que usaba el motor de reglas) está huérfano desde la eliminación del motor de reglas; podría reutilizarse para validar la salida del LLM o eliminarse definitivamente.

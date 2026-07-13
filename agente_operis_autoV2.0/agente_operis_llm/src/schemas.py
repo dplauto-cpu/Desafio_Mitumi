@@ -185,7 +185,7 @@ def crear_estructura_vacia_completa():
 def crear_estructura_vacia_historico():
     """
     Devuelve la estructura vacía para el histórico que guarda el backend.
-    
+
     Returns:
         dict: Estructura para almacenar versiones del briefing.
     """
@@ -201,6 +201,33 @@ def crear_estructura_vacia_historico():
         ],
         "ultima_actualizacion": ""
     }
+
+
+def extraer_ultimo_estado(historial_anterior):
+    """
+    Devuelve solo los 4 bloques (evento/cliente/ponentes/nota_bene) de la
+    última versión guardada en un histórico, o None si no hay ninguna.
+
+    Se usa para no tener que mandar al LLM (ni fusionar en Python) la
+    lista completa de "versiones", que crece con cada actualización: solo
+    hace falta la foto más reciente del evento para fusionar el nuevo
+    briefing sobre ella. Mandar el histórico completo era lo que hacía
+    saltar el límite de tokens por minuto del free tier de Groq tras
+    varias rondas de actualización sobre el mismo evento.
+
+    Args:
+        historial_anterior (dict | None): con la forma de
+            crear_estructura_vacia_historico()
+
+    Returns:
+        dict | None: los 4 bloques de la versión más reciente, o None
+    """
+    if not historial_anterior:
+        return None
+    versiones = historial_anterior.get("versiones") or []
+    if not versiones:
+        return None
+    return versiones[-1].get("datos") or None
 
 
 # =====================================================================

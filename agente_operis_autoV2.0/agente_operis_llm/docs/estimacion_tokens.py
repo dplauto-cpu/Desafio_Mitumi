@@ -26,7 +26,17 @@
 #   - Precios de openai/gpt-oss-120b en Groq (verificados en julio de
 #     2026): $0.15 / 1M tokens de entrada, $0.60 / 1M tokens de salida.
 #   - Free tier de Groq para este modelo (verificado en julio de 2026):
-#     1000 peticiones/día, 200.000 tokens/día.
+#     1000 peticiones/día, 200.000 tokens/día -- Y ADEMÁS 8.000
+#     tokens/minuto (TPM). Este script solo mide el consumo de UNA
+#     llamada (no dice nada por sí solo del límite por minuto), pero el
+#     TPM es el límite que de verdad importa vigilar en modo
+#     actualización: una sola llamada con un prompt grande puede
+#     saltarlo aunque quede mucho margen de tokens/día. Ver
+#     src/schemas.py::extraer_ultimo_estado y
+#     src/nucleo.py::_proteger_bloques_no_actualizados (12/07/2026): el
+#     histórico que se manda al LLM se redujo a una única versión, y la
+#     protección de bloques se movió a Python, precisamente para no
+#     rozar este límite en actualizaciones con histórico.
 # =====================================================================
 
 import sys
@@ -43,6 +53,8 @@ PRECIO_INPUT_POR_M = 0.15
 PRECIO_OUTPUT_POR_M = 0.60
 LIMITE_TPD_FREE = 200_000
 LIMITE_RPD_FREE = 1000
+LIMITE_TPM_FREE = 8_000  # tokens/minuto -- el límite que salta con UNA llamada grande,
+                          # no por acumulación de uso a lo largo del día (ver cabecera)
 
 
 def medir_caso(nombre_caso, ruta_archivo):
@@ -103,7 +115,8 @@ def formatear_informe(casos):
     lineas.append(
         f"Precios: ${PRECIO_INPUT_POR_M}/1M tokens entrada, "
         f"${PRECIO_OUTPUT_POR_M}/1M tokens salida. "
-        f"Free tier: {LIMITE_RPD_FREE} peticiones/día, {LIMITE_TPD_FREE:,} tokens/día."
+        f"Free tier: {LIMITE_RPD_FREE} peticiones/día, {LIMITE_TPD_FREE:,} tokens/día, "
+        f"{LIMITE_TPM_FREE:,} tokens/minuto."
     )
     lineas.append("")
     lineas.append("## Resumen comparativo")
@@ -158,13 +171,19 @@ def formatear_informe(casos):
         "**tokens/día** (200.000), no el de peticiones/día (1000)."
     )
     lineas.append(
-        "- **Nota sobre el modo actualización:** cuando se envía "
-        "`contexto.historial_anterior` (para fusionar con una versión "
-        "anterior) o `datos.bloques_a_actualizar` (actualización parcial), "
-        "el prompt de sistema crece con las instrucciones adicionales y el "
-        "histórico completo en JSON -- el consumo de tokens de entrada en "
-        "esos modos es sensiblemente mayor que el medido aquí (que "
-        "corresponde a una extracción inicial, sin histórico)."
+        "- **Nota sobre el modo actualización (actualizado 12/07/2026):** cuando se "
+        "envía `contexto.historial_anterior`, el prompt de sistema crece con la "
+        "última versión conocida del evento en JSON -- el consumo de tokens de "
+        "entrada en ese modo sigue siendo mayor que el medido aquí (extracción "
+        "inicial, sin histórico), pero ya no crece sin límite: antes se mandaba la "
+        "lista COMPLETA de versiones anteriores (crecía con cada ronda de "
+        "actualización y llegó a hacer saltar el límite de 8.000 tokens/minuto), "
+        "ahora solo se manda la última (`src/schemas.py::extraer_ultimo_estado`). "
+        "Además, el ejemplo JSON completo del prompt (~700 tokens) se omite "
+        "automáticamente en modo actualización, porque la última versión ya hace de "
+        "ejemplo. Estos números no incluyen esa diferencia -- para medirla de verdad "
+        "haría falta una llamada real con `historial_anterior`, que este script no "
+        "hace (para no complicar la comparación simple/complejo)."
     )
     lineas.append("")
 
