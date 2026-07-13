@@ -256,7 +256,7 @@
           <div>${rel}</div>
           ${c.motivo ? `<p class="motivo">${escape(c.motivo)}</p>` : ""}
           <div class="card-foot">
-            <a class="link" href="${escape(c.enlace_pliego || "#")}" target="_blank" rel="noopener">
+            <a class="link" href="/concursos/${encodeURIComponent(c.id_expediente)}/pliego.pdf" target="_blank" rel="noopener">
               Ver pliego
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M7 17 17 7M8 7h9v9"></path>

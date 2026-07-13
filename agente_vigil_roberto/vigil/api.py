@@ -38,6 +38,8 @@ from flask_cors import CORS
 from vigil import dedupe, history
 # traigo las funciones que generan el calendario .ics de un concurso
 from vigil.calendar_ics import generar_ics, nombre_fichero_ics
+# traigo las funciones que generan el PDF de resumen de un concurso
+from vigil.pliego_pdf import generar_pliego_pdf, nombre_fichero_pliego
 # traigo la ruta de la base de datos y los orígenes permitidos para CORS
 from vigil.config import CORS_ORIGINS, SQLITE_PATH
 # traigo el molde Convocatoria para reconstruirla desde el histórico
@@ -160,6 +162,25 @@ def calendario(id_expediente: str):
         ics,
         mimetype="text/calendar",
         headers={"Content-Disposition": f'attachment; filename="{nombre_fichero_ics(convocatoria)}"'},
+    )
+
+
+# sirvo el resumen (PDF) de un expediente: es lo que muestra "Ver pliego"
+@app.get("/concursos/<id_expediente>/pliego.pdf")
+def pliego(id_expediente: str):
+    # busco el concurso en el histórico
+    with dedupe.get_connection(SQLITE_PATH) as conn:
+        registro = history.obtener(conn, id_expediente)
+    # si no existe ese expediente, devuelvo 404
+    if registro is None:
+        abort(404, description="Concurso no encontrado.")
+    # genero el PDF de resumen a partir de los datos del histórico
+    pdf = generar_pliego_pdf(registro)
+    # lo devuelvo en línea (se abre en el navegador y se puede descargar)
+    return Response(
+        pdf,
+        mimetype="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{nombre_fichero_pliego(registro)}"'},
     )
 
 

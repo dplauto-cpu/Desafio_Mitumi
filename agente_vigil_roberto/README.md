@@ -39,6 +39,14 @@ Endpoints:
 - `GET /concursos` — consulta el histórico con filtros de query string:
   `q` (texto en objeto/órgano), `diputacion`, `urgencia`, `en_plazo` (bool,
   "solo los que siguen en plazo"), `relevante` (bool), `limite`, `offset`.
+- `GET /concursos/{id}/pliego.pdf` — **resumen del concurso en PDF** (lo que
+  abre el botón "Ver pliego"): objeto, poder adjudicador, importe, plazo,
+  urgencia, encaje con Mitumi y áreas temáticas, más el enlace al pliego oficial
+  en KontratazioA (el documento vinculante, campo `enlace_pliego`). Se genera al
+  vuelo desde el histórico (`pliego_pdf.py`); devuelve 404 si el expediente no
+  existe.
+- `GET /concursos/{id}/calendario.ics` — el plazo del concurso como evento de
+  calendario, para añadirlo a la agenda.
 - `POST /ejecuciones` — **lanza el agente en vivo** (scrape + LLM) en segundo
   plano; es el "botón de búsqueda al instante". Devuelve un `id` y `estado`.
 - `GET /ejecuciones/{id}` — estado de esa ejecución (`en_curso` / `terminada` /
@@ -47,6 +55,195 @@ Endpoints:
 
 El seguimiento de ejecuciones se guarda en memoria (se reinicia con el servidor);
 suficiente para un disparo puntual desde un botón.
+
+## Integración técnica (para full-stack)
+
+Esta sección describe, en detalle, **de dónde salen los datos, cómo se procesan
+y cómo se entregan**, para que la plataforma los integre sin sorpresas.
+
+### 1. De dónde se obtienen los datos (origen)
+
+- **Fuente**: Plataforma de Contratación Pública de Euskadi (**KontratazioA**),
+  vista de resultados en *formato ampliado* (HTML renderizado en servidor).
+- **Cómo**: `sources.py` usa **Playwright (Chromium headless)** para navegar,
+  seleccionar cada diputación en el autocompletado y paginar; el HTML resultante
+  se parsea con **BeautifulSoup**. No hay API pública del portal: se lee la web.
+- **Alcance**: las 3 diputaciones forales (Araba, Gipuzkoa, Bizkaia). Se miran
+  las convocatorias publicadas en los últimos **7 días** (`LOOKBACK_DAYS`), con
+  un filtro extra en cliente por "fecha de primera publicación".
+- **Estructurado + criba**: cada convocatoria cruda pasa por `extractor.py`
+  (**Groq LLM** + Pydantic) para limpiarla, y por `relevance.py` (**Groq LLM**)
+  que decide si encaja con Mitumi, redacta el motivo y pone etiquetas.
+
+### 2. Cómo se procesan (pipeline)
+
+```
+KontratazioA (web)
+  → sources.py     (scrape Playwright + BeautifulSoup)   → dict crudo
+  → dedupe.py      (nueva / modificación / ya vista, SQLite)
+  → extractor.py   (Groq + Pydantic)                      → Convocatoria
+  → relevance.py   (Groq: relevante?, motivo, etiquetas)  → VeredictoRelevancia
+  → urgency.py     (nivel + días hábiles restantes)       → Urgencia
+  → history.py     (guarda TODO el histórico en SQLite)
+  → publisher.py   (escribe salida/concursos.json + .ics)
+```
+
+Todo lo encontrado (relevante o no) va al **histórico SQLite**; solo lo
+**relevante** se vuelca al **`concursos.json`** del día.
+
+### 3. Cómo se entregan (dos superficies)
+
+Hay **dos formas** de consumir los datos, con **nombres de campo distintos**
+(ojo, importante):
+
+| Superficie | Qué es | Cuándo usarla | Campos |
+| --- | --- | --- | --- |
+| **API HTTP** (`api.py`) | Consulta en vivo del histórico + disparador | Si la plataforma pide datos bajo demanda | nombres "planos" de BD (`objeto`, `organo_convocante`, `urgencia_nivel`…) |
+| **Fichero `concursos.json`** (`publisher.py`) | Vuelco batch diario de los relevantes | Si la plataforma ingiere un fichero cada mañana | nombres "amigables" (`titulo`, `organismo`, `urgencia.nivel`…) |
+
+Ambas comparten `id_expediente` como clave. Elegid una y fijadla; recomendado
+para una web reactiva: **la API**.
+
+### 4. Referencia de la API HTTP
+
+- **Base URL** (producción): la del despliegue (p. ej. `https://vigil.midominio/`).
+- **CORS**: configurable con `VIGIL_CORS_ORIGINS` (coma-separado). Por defecto
+  `*`; en producción poned el dominio de la plataforma.
+- **Content-Type**: `application/json` salvo el `.pdf` (`application/pdf`) y el
+  `.ics` (`text/calendar`).
+- **Errores**: siempre en JSON, forma `{ "detail": "<mensaje>" }` (incluido el 404).
+
+#### `GET /concursos`
+
+Consulta el histórico. **Query params** (todos opcionales):
+
+| Param | Tipo | Defecto | Efecto |
+| --- | --- | --- | --- |
+| `q` | string | — | busca el texto en `objeto` y `organo_convocante` (LIKE) |
+| `diputacion` | `Araba`\|`Gipuzkoa`\|`Bizkaia` | — | filtra por territorio |
+| `urgencia` | `alta`\|`media`\|`baja`\|`cerrado`\|`desconocida` | — | filtra por nivel |
+| `en_plazo` | bool | `false` | solo los que tienen plazo y aún no ha vencido |
+| `relevante` | bool | `false` | solo los marcados relevantes para Mitumi |
+| `limite` | int (1–200) | `50` | tamaño de página |
+| `offset` | int (≥0) | `0` | desplazamiento (paginación) |
+
+Los bool aceptan `1/true/yes/on/si/sí`. Orden: por `plazo_iso` ascendente (los
+más próximos primero; los sin plazo, al final).
+
+**Respuesta `200`** — `{ "total": <int>, "concursos": [<Concurso>] }`, donde
+`total` es el nº de esta página (no el total global). Cada `<Concurso>`:
+
+| Campo | Tipo | Notas |
+| --- | --- | --- |
+| `id_expediente` | string | clave única |
+| `objeto` | string | título/objeto del contrato |
+| `organo_convocante` | string | organismo que convoca |
+| `diputacion` | string | `Araba`/`Gipuzkoa`/`Bizkaia` |
+| `importe` | string\|null | presupuesto sin IVA, tal cual (ej. `"45.000,00"`) |
+| `plazo_presentacion` | string\|null | fecha texto `dd/mm/aaaa hh:mm:ss` |
+| `plazo_iso` | string\|null | mismo plazo en ISO 8601 (ordenar/filtrar) |
+| `fecha_publicacion` | string\|null | `dd/mm/aaaa` |
+| `fecha_ultima_publicacion` | string\|null | `dd/mm/aaaa` (para modificaciones) |
+| `relevante` | bool\|null | encaje con Mitumi |
+| `motivo` | string\|null | explicación del encaje (texto del LLM) |
+| `etiquetas` | string[] | áreas temáticas |
+| `campos_no_verificables` | string[] | requisitos que el LLM no pudo confirmar |
+| `urgencia_nivel` | string\|null | `alta`/`media`/`baja`/`cerrado`/`desconocida` |
+| `urgencia_dias` | int\|null | días hábiles restantes |
+| `enlace_pliego` | string | URL del anuncio oficial en KontratazioA |
+| `visto_por_primera_vez` | string | timestamp SQLite |
+| `ultima_actualizacion` | string | timestamp SQLite |
+
+#### `GET /concursos/{id}/pliego.pdf`
+
+Devuelve el **resumen del concurso en PDF** (`application/pdf`, `inline`). `200`
+con el binario, o `404` si el `id` no existe. Es lo que abre "Ver pliego". Para
+enlazar al pliego **oficial**, usad el campo `enlace_pliego`.
+
+#### `GET /concursos/{id}/calendario.ics`
+
+Devuelve el plazo como evento iCalendar (`text/calendar`, `attachment`). `200`, o
+`404` si el expediente no existe o no tiene un plazo con fecha válida.
+
+#### `POST /ejecuciones`
+
+Lanza el agente en vivo (scrape + LLM) en segundo plano; **sin body**. Responde
+`202` con el objeto de ejecución:
+
+```json
+{ "id": "hex", "estado": "en_curso", "iniciado_en": "ISO",
+  "terminado_en": null, "nuevos": null, "error": null }
+```
+
+En producción tarda **minutos** (Playwright + Groq); en demo ~1 s. Guardad el
+`id` y haced *polling*.
+
+#### `GET /ejecuciones/{id}`
+
+Estado de una ejecución. `200` con el mismo objeto de arriba (cuando termina,
+`estado` = `terminada` y `nuevos` = nº de concursos añadidos; o `estado` =
+`error` con `error`), o `404` si el `id` no existe. El registro vive **en
+memoria**: se pierde al reiniciar el servidor.
+
+#### `GET /health`
+
+`200` → `{ "estado": "ok", "hora": "ISO" }`.
+
+### 5. Esquema del fichero `concursos.json`
+
+Lo escribe `publisher.py` en `salida/` en cada ejecución (siempre, aunque el día
+no haya novedades → lista vacía). Estructura:
+
+```json
+{
+  "generado_en": "2026-07-13T10:09:33.359628",
+  "fuente": "KontratazioA — Diputaciones Forales (Araba, Gipuzkoa, Bizkaia)",
+  "total": 4,
+  "concursos": [ { /* … */ } ]
+}
+```
+
+Cada concurso usa nombres **distintos a los de la API**:
+
+| Campo (JSON) | Equivale en la API a | Tipo |
+| --- | --- | --- |
+| `id_expediente` | `id_expediente` | string |
+| `titulo` | `objeto` | string |
+| `organismo` | `organo_convocante` | string |
+| `diputacion` | `diputacion` | string |
+| `fecha_publicacion` | `fecha_publicacion` | string\|null |
+| `fecha_ultima_publicacion` | `fecha_ultima_publicacion` | string\|null |
+| `plazo_presentacion` | `plazo_presentacion` | string\|null |
+| `plazo_iso` | `plazo_iso` | string\|null |
+| `importe` | `importe` | string\|null |
+| `enlace_pliego` | `enlace_pliego` | string |
+| `urgencia` | `{urgencia_nivel, urgencia_dias}` | objeto `{nivel, dias_habiles_restantes, etiqueta}` |
+| `etiquetas` | `etiquetas` | string[] |
+| `es_modificacion` | (no está en la API) | bool |
+| `motivo` | `motivo` | string |
+| `campos_no_verificables` | `campos_no_verificables` | string[] |
+| `archivo_ics` | (no está en la API) | string\|null, ruta relativa (`ics/<archivo>.ics`) |
+
+Además, `salida/ics/*.ics` contiene un calendario por concurso.
+
+### 6. Variables de entorno
+
+| Variable | Para qué | Defecto |
+| --- | --- | --- |
+| `GROQ_API_KEY` | clave del LLM (Groq). **Obligatoria en real** | `""` |
+| `GROQ_MODEL` | modelo de Groq | `llama-3.3-70b-versatile` |
+| `VIGIL_OUTPUT_DIR` | carpeta de salida del JSON/`.ics` | `./salida` |
+| `VIGIL_DB_PATH` | ruta del SQLite (histórico + dedupe) | `vigil/vigil.db` |
+| `VIGIL_CORS_ORIGINS` | orígenes CORS permitidos (coma-separado) | `*` |
+| `VIGIL_DEMO` | si `=1`, modo demo (sin web ni LLM) | (sin poner) |
+| `CRON_HORA` / `CRON_TIMEZONE` | hora/zona de la ejecución diaria | `07:00` / `Europe/Madrid` |
+
+### 7. Formatos de fecha (importante)
+
+Los campos `*_presentacion` y `fecha_*` vienen **tal cual del portal** en texto
+español (`dd/mm/aaaa` o `dd/mm/aaaa hh:mm:ss`). Para ordenar o comparar en la
+plataforma, usad **`plazo_iso`** (ISO 8601). Los timestamps `generado_en`,
+`visto_por_primera_vez` y `ultima_actualizacion` ya son ISO.
 
 ## Modo demo (enseñar el agente sin web ni Groq)
 
@@ -67,7 +264,7 @@ Luego abre **`http://127.0.0.1:8000/`** → una web con los concursos en tarjeta
 buscador, filtros (diputación, urgencia, "solo en plazo", "solo relevantes") y el
 botón **"Actualizar ahora"**, que lanza el agente en vivo (en demo, ~1 s). Esta web
 sirve de referencia visual para el equipo full-stack; la propia API queda en la
-misma dirección (`/concursos`, `/ejecuciones`, `/docs`).
+misma dirección (ver los endpoints en "Integración técnica").
 
 Usa una base de datos y una salida de demo aparte (`vigil_demo.db`, `salida_demo/`),
 así que **no toca los datos reales**. Para el agente **real**, quita `VIGIL_DEMO` y
@@ -98,6 +295,7 @@ que adaptar `publisher.py` para enviar ese mismo JSON por el nuevo canal.
 8. **publisher.py** → escribe el JSON y los `.ics` en `salida/` para la plataforma.
 9. **main.py** → orquesta todo el proceso de principio a fin.
 10. **api.py** → expone el histórico y el disparador de ejecución a la plataforma (Flask).
+11. **pliego_pdf.py** → arma, bajo demanda, el resumen del concurso en PDF que sirve la API en "Ver pliego".
 
 ## Instalación
 
